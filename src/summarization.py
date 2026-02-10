@@ -11,8 +11,7 @@ load_dotenv()
 
 # Initialize the language model
 llm = ChatGoogleGenerativeAI(
-    model="gemini-3-pro-preview",
-    # model="gemini-3-flash-preview",
+    model="gemini-2.5-pro",
     google_api_key=os.getenv("GOOGLE_API_KEY"),
     temperature=0.8,
     max_output_tokens=4096,
@@ -55,6 +54,7 @@ def summarize_transcript(transcript_path: str, summary_path: str) -> str:
                 "TARGET VIEWER: on-the-go professionals who value dense, five-minute knowledge bites.\n"
                 "Present clean text because this will be converted into voice audio ... so no [context block 1 ... 2 etc.] or anything like that. add nothing in the text other than the content summary ... no extra instructions at all! "
                 "IMPORTANT: This is a youtube script, so you MUST finish with 'Thanks for watching!'"
+                "IMPORTANT: DO NOT USE '*' IN THE SCRIPT FOR EMPHESIS! This script will be turned into audio, if you add those the audio reads them and destroys the video"
             )
         ),
         (

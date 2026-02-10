@@ -6,12 +6,12 @@ from src.summarization import summarize_transcript
 
 @patch('src.summarization.create_stuff_documents_chain')
 @patch('src.summarization.TextLoader')
-@patch('src.summarization.ChatAnthropic') # Patch the class to mock the instance
+@patch('src.summarization.ChatGoogleGenerativeAI')
 def test_summarize_transcript_unit(
-    mock_chat_anthropic,
+    mock_chat_google,
     mock_text_loader,
     mock_create_chain,
-    tmp_path # Use pytest's built-in temporary directory fixture
+    tmp_path
 ):
     """
     Unit test for summarize_transcript.

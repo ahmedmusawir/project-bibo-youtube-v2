@@ -87,6 +87,9 @@ def synthesize_speech(summary_path: str, audio_path: str) -> str:
     Returns:
         str: The path to the saved audio file.
     """
+    # Reload .env to pick up any changes made since module import
+    load_dotenv(override=True)
+    
     # Get voice config from environment
     voice_name = os.getenv("GOOGLE_TTS_VOICE", DEFAULT_VOICE)
     language_code = os.getenv("GOOGLE_TTS_LANG", DEFAULT_LANG)

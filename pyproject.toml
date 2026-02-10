@@ -20,4 +20,5 @@ testpaths = ["tests"]
 addopts = "-m 'not integration'"
 markers = [
     "integration: marks tests as integration tests (run with '-m integration')",
+    "dependency: marks tests with dependencies on other tests",
 ]
