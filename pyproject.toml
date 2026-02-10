@@ -1,0 +1,23 @@
+[project]
+name = "vid_gen_v1"
+version = "0.1.0"
+authors = [
+  { name="Tony Stark", email="tony@starkindustries.com" },
+]
+description = "A tool to automate YouTube video creation."
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src", "src.*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-m 'not integration'"
+markers = [
+    "integration: marks tests as integration tests (run with '-m integration')",
+]

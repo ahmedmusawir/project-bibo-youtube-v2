@@ -173,37 +173,35 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
+# MOOSE IGNORE
+output/*
+!output/.gitkeep
+
+# Ignore audio outputs
+audio/*
+!audio/.gitkeep
+
+# Ignore raw audio
+raw/*
+!raw/.gitkeep
+
+# Ignore all output videos
+output/*
+!output/.gitkeep
+
+# Ignore all sequence images (jpg, png)
+images/sequence/*
+images/sequence_vertex/*
+!images/sequence/.gitkeep
+!images/sequence_vertex/.gitkeep
+
+# (Optional) Ignore text outputs if you want, or keep as is
+text/*
+!text/.gitkeep
 
 # Google Cloud Service Account Key
 cyberize-vertex-api.json
 
-# --- OUTPUT folders for each video ---
-output/*
-!output/.gitkeep
-!output/**/.gitkeep
+# The output folder
+projects/
 
-# Utility: Keep example video folder structure (in case you want an example)
-!output/*/transcript/.gitkeep
-!output/*/summary/.gitkeep
-!output/*/audio/.gitkeep
-!output/*/title_desc/.gitkeep
-!output/*/images/.gitkeep
-!output/*/video/.gitkeep
-!output/*/logs/.gitkeep
-
-# --- VSCode/OS/Editor junk ---
-.vscode/
-__pycache__/
-*.pyc
-.DS_Store
-Thumbs.db
-
-# --- General ---
-*.log
-
-# --- Poetry, pip, etc. ---
-poetry.lock
-Pipfile.lock
-
-# --- Node cruft, just in case you mess with JS later ---
-node_modules/

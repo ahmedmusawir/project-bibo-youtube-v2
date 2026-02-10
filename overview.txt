@@ -1,0 +1,12 @@
+project-bibo-youtube-v1/
+├── .venv/                      # Python virtual environment (already created)
+├── .gitignore                  # Add .venv, __pycache__, etc.
+├── README.md                   # Write your masterplan here
+├── audio/                      # Final output MP3s
+├── raw/                        # Raw downloaded audio/video
+├── text/                       # Transcript + summary files
+├── transcriber.py              # Module: Step 1 (YouTube → transcript)
+├── summarizer.py               # Module: Step 2 (Transcript → summary)
+├── synthesizer.py              # Module: Step 3 (Summary → audio)
+├── utils.py                    # Shared helpers (file saving/loading, path stuff)
+└── run_lab.py                  # Manual launcher to test modules 1 by 1
