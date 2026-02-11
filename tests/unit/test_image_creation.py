@@ -39,7 +39,7 @@ def test_create_images_from_prompts_unit(mock_image_model, mock_vertexai, tmp_pa
     mock_vertexai.init.assert_called_once()
 
     # Verify the model was loaded
-    mock_image_model.from_pretrained.assert_called_once_with("imagen-4.0-generate-preview-06-06")
+    mock_image_model.from_pretrained.assert_called_once_with("imagen-4.0-ultra-generate-001")
 
     # Verify that generate_images was called 3 times (for 3 prompts)
     assert mock_model_instance.generate_images.call_count == 3

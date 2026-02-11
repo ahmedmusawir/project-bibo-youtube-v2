@@ -1,7 +1,9 @@
+import os
 import pytest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
+from langchain_core.messages import AIMessage
 
-from src.image_prompting import _calculate_num_images, _split_summary_into_chunks
+from src.image_prompting import _calculate_num_images, _split_summary_into_chunks, _generate_style_bible, generate_image_prompts
 
 # --- Tests for _calculate_num_images ---
 
@@ -46,3 +48,103 @@ def test_split_summary_into_chunks():
     summary_empty = ""
     chunks_empty = _split_summary_into_chunks(summary_empty, 5)
     assert len(chunks_empty) == 0
+
+# --- Tests for _generate_style_bible ---
+
+@patch('src.image_prompting.llm')
+def test_generate_style_bible(mock_llm):
+    """Tests that _generate_style_bible calls the LLM and returns stripped output."""
+    # When llm is mocked, LangChain wraps it as a RunnableLambda (callable).
+    # The chain calls mock_llm(input) and passes the result to StrOutputParser.
+    # StrOutputParser expects an AIMessage, so we return one.
+    style_text = "Cool blue-toned lighting with warm amber accents. Documentary photography style — shallow depth of field, natural lighting. No text overlays, no watermarks, no logos rendered in the image."
+    mock_llm.return_value = AIMessage(content=f"  {style_text}  ")
+
+    result = _generate_style_bible("This is a test script about AI technology.")
+
+    assert "Cool blue-toned lighting" in result
+    assert "No text overlays" in result
+    # Verify leading/trailing whitespace is stripped
+    assert not result.startswith(" ")
+    assert not result.endswith(" ")
+
+# --- Tests for generate_image_prompts with style bible ---
+
+@patch('src.image_prompting.llm')
+@patch('src.image_prompting.AudioSegment')
+def test_generate_image_prompts_creates_style_bible(mock_audio_segment, mock_llm, tmp_path):
+    """Tests that generate_image_prompts generates and saves a style bible."""
+    # Setup mock audio (60 seconds = 3 images at 20s/image)
+    mock_audio = mock_audio_segment.from_mp3.return_value
+    mock_audio.__len__.return_value = 60 * 1000
+
+    # Mock LLM: first call = style bible, next 3 = scene prompts
+    mock_llm.side_effect = [
+        AIMessage(content="Cool blue documentary style. Shallow depth of field. No text overlays, no watermarks, no logos rendered in the image."),
+        AIMessage(content="A photorealistic wide shot of a modern office"),
+        AIMessage(content="A photorealistic close-up of a computer screen"),
+        AIMessage(content="A photorealistic aerial view of a city skyline"),
+    ]
+
+    # Create input files
+    summary_path = tmp_path / "1_summary.txt"
+    summary_path.write_text("word " * 30)  # 30 words, will be split into 3 chunks
+    audio_path = tmp_path / "2_audio.mp3"
+    audio_path.write_text("fake audio")
+    prompts_path = tmp_path / "3_image_prompts.json"
+    style_bible_path = tmp_path / "3a_style_bible.txt"
+
+    result = generate_image_prompts(str(summary_path), str(audio_path), str(prompts_path))
+
+    # Style bible file should be created
+    assert style_bible_path.exists()
+    style_bible_content = style_bible_path.read_text()
+    assert "Cool blue" in style_bible_content
+
+    # Prompts file should be created with numbered lines
+    assert prompts_path.exists()
+    prompts_content = prompts_path.read_text()
+    lines = prompts_content.strip().split("\n")
+    assert len(lines) == 3
+    assert lines[0].startswith("1.")
+    assert lines[1].startswith("2.")
+    assert lines[2].startswith("3.")
+
+@patch('src.image_prompting.llm')
+@patch('src.image_prompting.AudioSegment')
+def test_generate_image_prompts_loads_existing_style_bible(mock_audio_segment, mock_llm, tmp_path):
+    """Tests that generate_image_prompts loads an existing style bible instead of regenerating."""
+    # Setup mock audio (40 seconds = 2 images at 20s/image)
+    mock_audio = mock_audio_segment.from_mp3.return_value
+    mock_audio.__len__.return_value = 40 * 1000
+
+    # Mock LLM — should only be called for scene prompts (style bible loaded from file)
+    mock_llm.side_effect = [
+        AIMessage(content="A photorealistic wide shot of a modern office"),
+        AIMessage(content="A photorealistic close-up of a computer screen"),
+    ]
+
+    # Create input files
+    summary_path = tmp_path / "1_summary.txt"
+    summary_path.write_text("word " * 20)
+    audio_path = tmp_path / "2_audio.mp3"
+    audio_path.write_text("fake audio")
+    prompts_path = tmp_path / "3_image_prompts.json"
+
+    # Pre-create the style bible file
+    style_bible_path = tmp_path / "3a_style_bible.txt"
+    style_bible_path.write_text("Existing style bible content for reuse.")
+
+    result = generate_image_prompts(str(summary_path), str(audio_path), str(prompts_path))
+
+    # Style bible should still contain the pre-existing content (not overwritten)
+    assert style_bible_path.read_text() == "Existing style bible content for reuse."
+
+    # Scene prompts should still be generated
+    assert prompts_path.exists()
+    prompts_content = prompts_path.read_text()
+    lines = prompts_content.strip().split("\n")
+    assert len(lines) == 2
+
+    # LLM was called exactly 2 times (scene prompts only, no style bible generation)
+    assert mock_llm.call_count == 2
