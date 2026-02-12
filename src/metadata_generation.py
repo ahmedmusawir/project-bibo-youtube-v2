@@ -5,17 +5,10 @@ from dotenv import load_dotenv
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.schema.output_parser import StrOutputParser
+from src.utils.config import get_prompting_llm
 
 # Load environment variables
 load_dotenv()
-
-# Initialize the language model
-llm = ChatGoogleGenerativeAI(
-    model="gemini-3-flash-preview",
-    google_api_key=os.getenv("GOOGLE_API_KEY"),
-    temperature=0.8,
-    max_output_tokens=1024,
-)
 
 def parse_metadata_output(raw_text: str) -> dict:
     """Parses the raw LLM output into a structured dictionary."""
@@ -82,6 +75,13 @@ def generate_metadata(summary_path: str, output_path: str) -> str:
     ])
 
     print("-> Creating metadata generation chain...")
+    # Initialize LLM with config-driven model selection
+    llm = ChatGoogleGenerativeAI(
+        model=get_prompting_llm(),
+        google_api_key=os.getenv("GOOGLE_API_KEY"),
+        temperature=0.8,
+        max_output_tokens=8192,
+    )
     chain = prompt | llm | StrOutputParser()
 
     print("-> Invoking chain to generate metadata...")

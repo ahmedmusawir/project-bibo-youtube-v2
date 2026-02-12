@@ -6,6 +6,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.schema.output_parser import StrOutputParser
 from pydub import AudioSegment
+from src.utils.config import get_prompting_llm
 
 # Load environment variables
 load_dotenv()
@@ -14,14 +15,6 @@ load_dotenv()
 # This is now the main control for your video's pacing.
 # Change this one value to adjust how many images are generated for the video.
 SECONDS_PER_IMAGE = 20
-
-# Initialize the language model
-llm = ChatGoogleGenerativeAI(
-    model="gemini-2.5-flash",
-    google_api_key=os.getenv("GOOGLE_API_KEY"),
-    temperature=0.8,
-    max_output_tokens=8192,
-)
 
 def _calculate_num_images(audio_path: str, seconds_per_image: int) -> int:
     """Calculates the number of images needed based on audio length."""
@@ -55,6 +48,14 @@ def _generate_style_bible(summary_text: str) -> str:
         The style bible string (3-5 sentences, ~60-80 words).
     """
     print("-> Generating Visual Style Bible from script...")
+
+    # Initialize LLM with config-driven model selection
+    llm = ChatGoogleGenerativeAI(
+        model=get_prompting_llm(),
+        google_api_key=os.getenv("GOOGLE_API_KEY"),
+        temperature=0.8,
+        max_output_tokens=8192,
+    )
 
     prompt_template = ChatPromptTemplate.from_messages([
         ("system", (
@@ -128,6 +129,14 @@ def generate_image_prompts(summary_path: str, audio_path: str, prompts_path: str
         print(f"-> Style Bible saved to: {style_bible_path}")
 
     # 4. Generate a prompt for each text chunk
+    # Initialize LLM with config-driven model selection
+    llm = ChatGoogleGenerativeAI(
+        model=get_prompting_llm(),
+        google_api_key=os.getenv("GOOGLE_API_KEY"),
+        temperature=0.8,
+        max_output_tokens=8192,
+    )
+
     prompt_template = ChatPromptTemplate.from_messages([
         ("system", (
             "You are a visual scene director. Your job is to create a single, vivid visual prompt for an AI image generator. You must include these words (and more like them) in every prompt: [photorealistic] [high-resolution] [realistic lighting].\n"

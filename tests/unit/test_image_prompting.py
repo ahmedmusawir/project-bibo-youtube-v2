@@ -51,14 +51,18 @@ def test_split_summary_into_chunks():
 
 # --- Tests for _generate_style_bible ---
 
-@patch('src.image_prompting.llm')
-def test_generate_style_bible(mock_llm):
+@patch('src.image_prompting.ChatGoogleGenerativeAI')
+def test_generate_style_bible(mock_llm_class):
     """Tests that _generate_style_bible calls the LLM and returns stripped output."""
-    # When llm is mocked, LangChain wraps it as a RunnableLambda (callable).
-    # The chain calls mock_llm(input) and passes the result to StrOutputParser.
+    # Mock the LLM instance that gets created inside the function
+    mock_llm_instance = MagicMock()
+    mock_llm_class.return_value = mock_llm_instance
+
+    # When llm is used in a chain, it's called as a callable.
+    # The chain calls mock_llm_instance(input) and passes the result to StrOutputParser.
     # StrOutputParser expects an AIMessage, so we return one.
     style_text = "Cool blue-toned lighting with warm amber accents. Documentary photography style — shallow depth of field, natural lighting. No text overlays, no watermarks, no logos rendered in the image."
-    mock_llm.return_value = AIMessage(content=f"  {style_text}  ")
+    mock_llm_instance.return_value = AIMessage(content=f"  {style_text}  ")
 
     result = _generate_style_bible("This is a test script about AI technology.")
 
@@ -70,16 +74,21 @@ def test_generate_style_bible(mock_llm):
 
 # --- Tests for generate_image_prompts with style bible ---
 
-@patch('src.image_prompting.llm')
+@patch('src.image_prompting.ChatGoogleGenerativeAI')
 @patch('src.image_prompting.AudioSegment')
-def test_generate_image_prompts_creates_style_bible(mock_audio_segment, mock_llm, tmp_path):
+def test_generate_image_prompts_creates_style_bible(mock_audio_segment, mock_llm_class, tmp_path):
     """Tests that generate_image_prompts generates and saves a style bible."""
     # Setup mock audio (60 seconds = 3 images at 20s/image)
     mock_audio = mock_audio_segment.from_mp3.return_value
     mock_audio.__len__.return_value = 60 * 1000
 
-    # Mock LLM: first call = style bible, next 3 = scene prompts
-    mock_llm.side_effect = [
+    # Mock LLM instances - function creates 2 instances (style bible + scene prompts)
+    # We need to mock the return value for each call
+    mock_llm_instance = MagicMock()
+    mock_llm_class.return_value = mock_llm_instance
+
+    # Mock LLM calls: first call = style bible, next 3 = scene prompts
+    mock_llm_instance.side_effect = [
         AIMessage(content="Cool blue documentary style. Shallow depth of field. No text overlays, no watermarks, no logos rendered in the image."),
         AIMessage(content="A photorealistic wide shot of a modern office"),
         AIMessage(content="A photorealistic close-up of a computer screen"),
@@ -110,16 +119,19 @@ def test_generate_image_prompts_creates_style_bible(mock_audio_segment, mock_llm
     assert lines[1].startswith("2.")
     assert lines[2].startswith("3.")
 
-@patch('src.image_prompting.llm')
+@patch('src.image_prompting.ChatGoogleGenerativeAI')
 @patch('src.image_prompting.AudioSegment')
-def test_generate_image_prompts_loads_existing_style_bible(mock_audio_segment, mock_llm, tmp_path):
+def test_generate_image_prompts_loads_existing_style_bible(mock_audio_segment, mock_llm_class, tmp_path):
     """Tests that generate_image_prompts loads an existing style bible instead of regenerating."""
     # Setup mock audio (40 seconds = 2 images at 20s/image)
     mock_audio = mock_audio_segment.from_mp3.return_value
     mock_audio.__len__.return_value = 40 * 1000
 
-    # Mock LLM — should only be called for scene prompts (style bible loaded from file)
-    mock_llm.side_effect = [
+    # Mock LLM instance — should only be called for scene prompts (style bible loaded from file)
+    mock_llm_instance = MagicMock()
+    mock_llm_class.return_value = mock_llm_instance
+
+    mock_llm_instance.side_effect = [
         AIMessage(content="A photorealistic wide shot of a modern office"),
         AIMessage(content="A photorealistic close-up of a computer screen"),
     ]
@@ -146,5 +158,5 @@ def test_generate_image_prompts_loads_existing_style_bible(mock_audio_segment, m
     lines = prompts_content.strip().split("\n")
     assert len(lines) == 2
 
-    # LLM was called exactly 2 times (scene prompts only, no style bible generation)
-    assert mock_llm.call_count == 2
+    # LLM instance was called exactly 2 times (scene prompts only, no style bible generation)
+    assert mock_llm_instance.call_count == 2

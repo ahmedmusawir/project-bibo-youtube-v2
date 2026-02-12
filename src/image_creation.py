@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 
 import vertexai
 from vertexai.preview.vision_models import ImageGenerationModel
+from src.utils.config import get_current_image_model
 
 # Load environment variables
 load_dotenv()
@@ -50,10 +51,9 @@ def create_images_from_prompts(prompts_path: str, output_dir: str) -> str:
     Path(output_dir).mkdir(parents=True, exist_ok=True)
 
     print("-> Loading Imagen model...")
-    # generation_model = ImageGenerationModel.from_pretrained("imagen-4.0-fast-generate-001")
-    # generation_model = ImageGenerationModel.from_pretrained("imagen-4.0-generate-001")
-    generation_model = ImageGenerationModel.from_pretrained("imagen-4.0-ultra-generate-001")
-    print("✅ Model loaded successfully.")
+    model_name = get_current_image_model()
+    generation_model = ImageGenerationModel.from_pretrained(model_name)
+    print(f"✅ Model loaded successfully: {model_name}")
 
     log_data = []
     for i, prompt in enumerate(numbered_prompts):

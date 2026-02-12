@@ -1,0 +1,37 @@
+{
+  "llm_summarization": {
+    "current": "gemini-3-flash-preview",
+    "available": [
+      "gemini-3-flash-preview",
+      "gemini-2.5-pro",
+      "gemini-2.5-flash",
+      "gemini-2.0-flash"
+    ]
+  },
+  "llm_prompting": {
+    "current": "gemini-2.5-flash",
+    "available": [
+      "gemini-2.5-flash",
+      "gemini-2.5-pro",
+      "gemini-2.0-flash"
+    ]
+  },
+  "tts": {
+    "current_voice": "en-US-Studio-O",
+    "current_lang": "en-US",
+    "available": [
+      {"id": "en-US-Studio-O", "label": "Female (Studio-O)", "lang": "en-US"},
+      {"id": "en-US-Studio-M", "label": "Male (Studio-M)", "lang": "en-US"},
+      {"id": "en-US-Neural2-D", "label": "Male (Neural2-D)", "lang": "en-US"},
+      {"id": "en-US-Neural2-F", "label": "Female (Neural2-F)", "lang": "en-US"}
+    ]
+  },
+  "image_gen": {
+    "current": "imagen-4.0-ultra-generate-001",
+    "available": [
+      "imagen-4.0-ultra-generate-001",
+      "imagen-4.0-generate-001",
+      "imagen-4.0-fast-generate-001"
+    ]
+  }
+}

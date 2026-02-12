@@ -4,6 +4,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from pydub import AudioSegment
 from google.cloud import texttospeech
+from src.utils.config import get_current_voice
 
 # Load environment variables
 load_dotenv()
@@ -11,10 +12,6 @@ load_dotenv()
 # Google Cloud TTS has a 5000 byte limit per request (roughly 5000 chars for ASCII)
 # We use 4500 to be safe with multi-byte characters
 CHUNK_LIMIT = 4500
-
-# Voice configuration from environment variables
-DEFAULT_VOICE = "en-US-Studio-O"  # A high-quality Studio voice
-DEFAULT_LANG = "en-US"
 
 
 def _get_tts_client():
@@ -87,12 +84,17 @@ def synthesize_speech(summary_path: str, audio_path: str) -> str:
     Returns:
         str: The path to the saved audio file.
     """
-    # Reload .env to pick up any changes made since module import
+    # Reload .env to pick up any changes made since module import (for API keys)
     load_dotenv(override=True)
-    
-    # Get voice config from environment
-    voice_name = os.getenv("GOOGLE_TTS_VOICE", DEFAULT_VOICE)
-    language_code = os.getenv("GOOGLE_TTS_LANG", DEFAULT_LANG)
+
+    # Get voice config from centralized config
+    try:
+        voice_name, language_code = get_current_voice()
+        if not voice_name or not language_code:
+            raise ValueError("Config returned empty voice_name or language_code")
+    except Exception as e:
+        print(f"❌ ERROR: Failed to load voice config from config/models.json: {e}")
+        raise
     
     print(f"\n-> Reading summary from: {summary_path}")
     with open(summary_path, "r", encoding="utf-8") as f:
@@ -122,25 +124,36 @@ def synthesize_speech(summary_path: str, audio_path: str) -> str:
     print("-> Starting synthesis for each chunk...")
     for i, chunk in enumerate(chunks):
         print(f"   - Synthesizing chunk {i+1}/{len(chunks)}...")
-        
-        synthesis_input = texttospeech.SynthesisInput(text=chunk)
-        
-        response = client.synthesize_speech(
-            input=synthesis_input,
-            voice=voice,
-            audio_config=audio_config,
-        )
-        
-        # Write to temp file
-        temp_fd, temp_path = tempfile.mkstemp(suffix=".mp3")
-        os.close(temp_fd)
-        temp_files.append(temp_path)
-        
-        with open(temp_path, "wb") as out:
-            out.write(response.audio_content)
-        
-        # Load and append to combined audio
-        combined_audio += AudioSegment.from_mp3(temp_path)
+
+        try:
+            synthesis_input = texttospeech.SynthesisInput(text=chunk)
+
+            response = client.synthesize_speech(
+                input=synthesis_input,
+                voice=voice,
+                audio_config=audio_config,
+            )
+
+            # Validate response
+            if not response.audio_content:
+                raise ValueError(f"TTS returned empty audio for chunk {i+1}")
+
+            # Write to temp file
+            temp_fd, temp_path = tempfile.mkstemp(suffix=".mp3")
+            os.close(temp_fd)
+            temp_files.append(temp_path)
+
+            with open(temp_path, "wb") as out:
+                out.write(response.audio_content)
+
+            # Load and append to combined audio
+            combined_audio += AudioSegment.from_mp3(temp_path)
+            print(f"   ✓ Chunk {i+1} synthesized successfully ({len(response.audio_content)} bytes)")
+
+        except Exception as e:
+            print(f"❌ ERROR synthesizing chunk {i+1}/{len(chunks)}: {e}")
+            print(f"   Chunk preview: {chunk[:100]}...")
+            raise
 
     # Ensure the output directory exists
     output_dir = os.path.dirname(audio_path)
