@@ -4,17 +4,17 @@ from dotenv import load_dotenv
 from langchain_community.document_loaders import TextLoader
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.chains.combine_documents import create_stuff_documents_chain
+from langchain_classic.chains.combine_documents import create_stuff_documents_chain
 
 # Load environment variables
 load_dotenv()
 
 # Initialize the language model
 llm = ChatGoogleGenerativeAI(
-    model="gemini-2.5-pro",
+    model="gemini-3-flash-preview",
     google_api_key=os.getenv("GOOGLE_API_KEY"),
-    temperature=0.8,
-    max_output_tokens=4096,
+    temperature=0.5,
+    # max_output_tokens=4096,
 )
 
 def summarize_transcript(transcript_path: str, summary_path: str) -> str:
@@ -46,8 +46,6 @@ def summarize_transcript(transcript_path: str, summary_path: str) -> str:
                 "4. Finish with a conclusive, satisfying statement.\n\n"
                 "📑 STRUCTURE:\n"
                 "- 1-sentence HOOK that sparks curiosity.\n"
-                "- 2-3 short CONTEXT blocks (each ≤120 words) explaining core ideas.\n"
-                "- BULLETED ‘Key Takeaways’ section (3-5 bullets, ≤40 words each).\n"
                 "- 1-sentence CLOSING that ties everything together.\n\n"
                 "🎯 STYLE: concise, vivid, accessible—think ‘mini-doc for busy tech lovers’. "
                 "Sprinkle critical stats or comparisons only when they sharpen understanding.\n"
@@ -55,6 +53,9 @@ def summarize_transcript(transcript_path: str, summary_path: str) -> str:
                 "Present clean text because this will be converted into voice audio ... so no [context block 1 ... 2 etc.] or anything like that. add nothing in the text other than the content summary ... no extra instructions at all! "
                 "IMPORTANT: This is a youtube script, so you MUST finish with 'Thanks for watching!'"
                 "IMPORTANT: DO NOT USE '*' IN THE SCRIPT FOR EMPHESIS! This script will be turned into audio, if you add those the audio reads them and destroys the video"
+                "IMPORTANT: - DO NOT USE ANY 'KEY TAKE AWAY SECTION' ... YOU MUST NOT!"
+                "IMPORTANT: The script MUST end with 'Thanks for watching'"
+                "YOU MUST NEVER USE * OR ANY SPECIAL CHARACTERS IN THE SCRIPT, CUZ THOSE WILL BE READ BY AI AUDIO AND THE WILL DESTROY THE VIDEO. THIS IS SCRIPT IS BEING GENERATED STRICTLY TO PRODUCE AI VOICE AUDIO. NO * OR SPECIAL CHARACTERS"
             )
         ),
         (
