@@ -1,6 +1,6 @@
 {
   "llm_summarization": {
-    "current": "gemini-3-flash-preview",
+    "current": "gemini-2.5-flash",
     "available": [
       "gemini-3-flash-preview",
       "gemini-2.5-pro",

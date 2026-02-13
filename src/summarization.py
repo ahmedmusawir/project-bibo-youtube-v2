@@ -125,11 +125,10 @@ FINAL SCRIPT (920-950 words, ending with "Thanks for watching"):"""
 
         # Unified ChatGoogleGenerativeAI - passing 'project' triggers Vertex AI backend
         # Uses GOOGLE_APPLICATION_CREDENTIALS for auth (ADC pattern)
-        # Using 'global' location for preview models
         llm = ChatGoogleGenerativeAI(
             model=model_name,
             project=os.getenv("GOOGLE_CLOUD_PROJECT"),  # Triggers Vertex AI!
-            location="global",  # Preview models need global location
+            location=os.getenv("GOOGLE_CLOUD_REGION", "us-east1"),
             temperature=0.8,
             max_output_tokens=8192,
         )
