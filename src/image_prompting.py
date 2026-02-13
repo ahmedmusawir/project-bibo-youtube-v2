@@ -6,6 +6,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.output_parsers import StrOutputParser
 from pydub import AudioSegment
+from src.utils.config import get_prompting_llm
 
 # Load environment variables
 load_dotenv()
@@ -15,9 +16,9 @@ load_dotenv()
 # Change this one value to adjust how many images are generated for the video.
 SECONDS_PER_IMAGE = 20
 
-# Initialize the language model
+# Initialize the language model (using config-driven model selection)
 llm = ChatGoogleGenerativeAI(
-    model="gemini-2.5-flash",
+    model=get_prompting_llm(),
     google_api_key=os.getenv("GOOGLE_API_KEY"),
     temperature=0.8,
     max_output_tokens=8192,

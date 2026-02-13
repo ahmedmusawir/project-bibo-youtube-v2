@@ -49,10 +49,12 @@ def create_images_from_prompts(prompts_path: str, output_dir: str) -> str:
     # Create the output directory if it doesn't exist
     Path(output_dir).mkdir(parents=True, exist_ok=True)
 
-    print("-> Loading Imagen model...")
-    # generation_model = ImageGenerationModel.from_pretrained("imagen-4.0-fast-generate-001")
-    # generation_model = ImageGenerationModel.from_pretrained("imagen-4.0-generate-001")
-    generation_model = ImageGenerationModel.from_pretrained("imagen-4.0-ultra-generate-001")
+    # Get image generation model from config
+    from src.utils.config import get_image_gen_model
+    model_name = get_image_gen_model()
+
+    print(f"-> Loading Imagen model: {model_name}...")
+    generation_model = ImageGenerationModel.from_pretrained(model_name)
     print("✅ Model loaded successfully.")
 
     log_data = []

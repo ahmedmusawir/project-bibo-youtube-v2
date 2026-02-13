@@ -5,13 +5,14 @@ from dotenv import load_dotenv
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.output_parsers import StrOutputParser
+from src.utils.config import get_prompting_llm
 
 # Load environment variables
 load_dotenv()
 
-# Initialize the language model
+# Initialize the language model (using config-driven model selection)
 llm = ChatGoogleGenerativeAI(
-    model="gemini-3-flash-preview",
+    model=get_prompting_llm(),
     google_api_key=os.getenv("GOOGLE_API_KEY"),
     temperature=0.8,
     max_output_tokens=1024,

@@ -1,0 +1,125 @@
+Tony, perfect timing for a brain pick while the video cooks. Let me break this down:
+
+---
+
+### Question 1: Config → Streamlit Dropdowns
+
+**Yes, exactly right.** Your `config/config.json` is already Streamlit-ready:
+
+
+# Streamlit reads the same config
+config = load_config()
+
+selected_llm = st.selectbox(
+    "LLM Model",
+    options=config["llm"]["available"],
+    index=config["llm"]["available"].index(config["llm"]["current"])
+)
+
+selected_voice = st.selectbox(
+    "Voice",
+    options=[v["label"] for v in config["tts"]["available"]],
+)
+
+
+**Zero extra work needed** — the config pattern you just built is the bridge.
+
+---
+
+### Question 2: Stitch Designs for Streamlit?
+
+**Partial yes.** Here's the reality:
+
+| What Transfers | What Doesn't |
+|----------------|--------------|
+| Layout structure (sidebar, tabs) | Pixel-perfect styling |
+| Component placement | Custom widgets |
+| User flow / navigation | Animations, transitions |
+| Color palette (roughly) | Complex interactions |
+
+**My take:** Use Stitch designs as **wireframe reference**, not pixel targets. Streamlit has its own component library — fighting it wastes time.
+
+Your `UI_SPEC.md` already translated the Stitch designs into Streamlit-native patterns. **That's your blueprint.**
+
+---
+
+### Question 3: CLI → Streamlit Plan
+
+Here's the phased approach:
+
+---
+
+#### **Phase 2A: Streamlit Wrapper (1-2 days)**
+
+| Step | Task | Files |
+|------|------|-------|
+| 1 | Create `app/` directory structure | `app/__init__.py`, `app/main.py` |
+| 2 | Build sidebar navigation | 7 tabs per UI_SPEC |
+| 3 | Projects tab | List/create/select projects |
+| 4 | Starter tab | Paste text → save to `1_summary.txt` |
+| 5 | Script tab | Display/edit script, approve button |
+| 6 | Audio tab | Generate button, audio player |
+| 7 | Images tab | Generate button, gallery grid |
+| 8 | Video tab | Assemble button, video player, download |
+| 9 | Config dropdown | Model/voice selection from `config.json` |
+
+---
+
+#### **Architecture (Critical)**
+
+```
+project-bibo-youtube-v2/
+├── src/                    # ← ENGINE (unchanged)
+│   ├── summarization.py
+│   ├── text_to_speech.py
+│   ├── image_prompting.py
+│   ├── image_creation.py
+│   └── video_assembly.py
+├── app/                    # ← NEW: Streamlit UI
+│   ├── main.py             # Entry point
+│   ├── components/         # Reusable UI pieces
+│   │   ├── sidebar.py
+│   │   ├── project_selector.py
+│   │   └── approval_buttons.py
+│   └── tabs/               # One file per tab
+│       ├── projects.py
+│       ├── starter.py
+│       ├── script.py
+│       ├── audio.py
+│       ├── images.py
+│       └── video.py
+├── config/
+│   └── config.json         # ← Models/voices (already done)
+├── main.py                 # CLI entry (keep working)
+└── run_app.py              # Streamlit launcher
+```
+
+**Key principle:** `app/` calls `src/` functions. UI and engine stay separate.
+
+---
+
+#### **State Management**
+
+Per your `APP_BRIEF.md`, use file-based state:
+
+```python
+# Each project folder IS the state
+projects/
+└── Al-Jazeera/
+    ├── config.json          # Approval flags
+    ├── 1_summary.txt        # Script
+    ├── 2_audio.mp3          # Generated audio
+    ├── 3_image_prompts.json # Prompts
+    ├── 4_images/            # Generated images
+    └── 5_final_video.mp4    # Output
+```
+
+Streamlit reads/writes these files. No database needed.
+
+---
+
+### Next Step
+
+Want me to draft the Sonnet prompt for **Step 1-3** (project structure + sidebar + Projects tab)?
+
+That gets you a working skeleton you can see and click, then we iterate tab by tab.

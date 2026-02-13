@@ -89,10 +89,16 @@ def synthesize_speech(summary_path: str, audio_path: str) -> str:
     """
     # Reload .env to pick up any changes made since module import
     load_dotenv(override=True)
-    
-    # Get voice config from environment
-    voice_name = os.getenv("GOOGLE_TTS_VOICE", DEFAULT_VOICE)
-    language_code = os.getenv("GOOGLE_TTS_LANG", DEFAULT_LANG)
+
+    # Get voice config from config file (fallback to environment variables for backward compatibility)
+    from src.utils.config import get_tts_voice, get_tts_lang
+    try:
+        voice_name = get_tts_voice()
+        language_code = get_tts_lang()
+    except (FileNotFoundError, KeyError):
+        # Fallback to environment variables if config file doesn't exist
+        voice_name = os.getenv("GOOGLE_TTS_VOICE", DEFAULT_VOICE)
+        language_code = os.getenv("GOOGLE_TTS_LANG", DEFAULT_LANG)
     
     print(f"\n-> Reading summary from: {summary_path}")
     with open(summary_path, "r", encoding="utf-8") as f:

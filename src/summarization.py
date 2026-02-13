@@ -5,16 +5,17 @@ from langchain_community.document_loaders import TextLoader
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_classic.chains.combine_documents import create_stuff_documents_chain
+from src.utils.config import get_summarization_llm
 
 # Load environment variables
 load_dotenv()
 
-# Initialize the language model
+# Initialize the language model (using config-driven model selection)
 llm = ChatGoogleGenerativeAI(
-    model="gemini-3-flash-preview",
+    model=get_summarization_llm(),
     google_api_key=os.getenv("GOOGLE_API_KEY"),
     temperature=0.5,
-    # max_output_tokens=4096,
+    # max_output_tokens=4096,  # REMOVED - was causing truncation
 )
 
 def summarize_transcript(transcript_path: str, summary_path: str) -> str:

@@ -1,0 +1,301 @@
+Alright Stark… this is the right moment to think clean architecture instead of just slapping Streamlit on top.
+
+You already did the hard part:
+
+* CLI pipeline works end-to-end ✅
+* Models + voices centralized in `/config/config.json` ✅
+* File artifacts per project exist (transcript, summary, audio, images, video) ✅
+
+That means you are **in perfect shape** to build a GUI without touching core logic.
+
+Let’s break this down properly.
+
+---
+
+# 1️⃣ Your config.json decision — was it correct?
+
+Yes. 100%.
+
+Because now:
+
+* Streamlit can read `config.json`
+* Populate dropdowns dynamically
+* Save user selection back to project config
+* Pipeline reads from project config
+
+That’s clean separation.
+
+You accidentally designed it correctly.
+
+---
+
+# 2️⃣ Should you use Stitch desktop designs for Streamlit?
+
+Short answer:
+Yes for layout inspiration.
+No for pixel perfection.
+
+Why?
+
+Streamlit is:
+
+* Opinionated
+* Block-based
+* Not fully CSS-freeform unless you hack it
+* Not a desktop UI toolkit
+
+You can approximate:
+
+* Sidebar
+* Tabs
+* Sections
+* Cards
+* Progress bars
+
+But you cannot perfectly replicate a custom desktop UI.
+
+So use Stitch designs as:
+
+* Structural blueprint
+* Section ordering guide
+* UX flow reference
+
+Not as exact UI implementation spec.
+
+Think of Streamlit as:
+
+> Prototype layer / UX validation layer
+
+Not final desktop UI.
+
+---
+
+# 3️⃣ The Correct Conversion Strategy (CRITICAL)
+
+Do NOT rewrite your pipeline.
+
+Do NOT move logic into Streamlit.
+
+Do NOT mix UI with processing.
+
+Instead:
+
+Refactor CLI pipeline into a callable service layer.
+
+---
+
+## Architecture Refactor (Clean Way)
+
+Right now you probably have something like:
+
+main.py
+→ calls transcription
+→ calls summarization
+→ calls image prompting
+→ calls image gen
+→ calls video gen
+
+We want this:
+
+```
+src/
+  pipeline/
+      run_pipeline.py
+      run_step.py
+  services/
+      transcription.py
+      summarization.py
+      image_prompting.py
+      image_creation.py
+      video_generation.py
+```
+
+Streamlit should only call:
+
+```
+run_full_pipeline(project_name)
+run_specific_step(project_name, step_number)
+```
+
+Nothing else.
+
+---
+
+# 4️⃣ What Streamlit Should Do
+
+Streamlit should ONLY:
+
+1. Create / load project
+2. Show project file structure
+3. Let user choose:
+
+   * LLM model
+   * Image model
+   * Voice
+4. Let user run:
+
+   * Next missing step
+   * Full pipeline
+   * Specific step
+5. Display:
+
+   * Logs
+   * Status
+   * Output preview (audio / image / video)
+
+That’s it.
+
+It becomes a GUI wrapper.
+
+---
+
+# 5️⃣ Implementation Plan (Exact Order)
+
+### Phase 1 — Extract Pipeline Core (No UI Yet)
+
+Goal:
+Make your CLI callable as a Python function.
+
+Instead of:
+
+```bash
+python main.py
+```
+
+You want:
+
+```python
+from src.pipeline import run_pipeline
+run_pipeline(project="Al-Jazeera")
+```
+
+This step is mandatory before Streamlit.
+
+---
+
+### Phase 2 — Create Minimal Streamlit Wrapper
+
+Create:
+
+```
+app.py
+```
+
+Inside:
+
+* Load config.json
+* Dropdown for models
+* Dropdown for voices
+* Project name input
+* Buttons:
+
+  * Run next step
+  * Run full pipeline
+  * Run specific step
+
+When clicked → call your pipeline functions.
+
+No redesign.
+No fancy UI yet.
+
+Just working.
+
+---
+
+### Phase 3 — Artifact Viewer
+
+Add:
+
+* Show transcript
+* Show summary
+* Show generated prompts
+* Show image thumbnails
+* Audio player
+* Video player
+
+This replicates your CLI inspectability.
+
+---
+
+# 6️⃣ Critical Question You Must Answer
+
+Do you want:
+
+A) Blocking UI (user waits while video runs)
+B) Background task + progress updates
+
+For now, choose A.
+
+Keep it simple.
+
+Streamlit will freeze while running.
+That’s fine for prototype.
+
+Later you can add async.
+
+---
+
+# 7️⃣ Desktop Delivery Strategy
+
+You mentioned:
+
+> something normal Windows users can use
+
+Here’s the cleanest route:
+
+1. Streamlit app
+2. Package with:
+
+   * `streamlit run app.py`
+3. Use:
+
+   * `pyinstaller`
+     OR
+   * Wrap in simple launcher .exe
+4. Auto-open browser
+
+Coach clicks icon → browser opens → app runs locally.
+
+That’s 10x easier than jumping to PyQt immediately.
+
+---
+
+# 8️⃣ What NOT To Do
+
+Do not:
+
+* Put business logic in Streamlit
+* Hardcode models in app.py
+* Duplicate CLI logic
+* Remove CLI version
+
+CLI remains your engineering console.
+
+Streamlit becomes Coach mode.
+
+---
+
+# 9️⃣ High-Level Plan Summary
+
+Step 1: Extract pipeline into callable module
+Step 2: Build minimal Streamlit wrapper
+Step 3: Add project artifact viewer
+Step 4: Test Windows packaging
+Step 5: Only then consider full desktop GUI rewrite
+
+---
+
+# 10️⃣ Strategic Advice
+
+You are doing this correctly:
+
+CLI first → GUI second → Desktop final.
+
+That’s how real systems evolve.
+
+If you want, next we can:
+
+* Sketch exact Streamlit screen layout
+* Or design the internal `pipeline_controller.py` abstraction
+
+
