@@ -690,3 +690,106 @@ Uses Google Application Default Credentials (ADC):
 
 1. Service account JSON for most Google Cloud APIs
 2. Separate API key for Gemini (via `GOOGLE_API_KEY`)
+
+
+---
+
+---
+
+# 🔴 CRITICAL: SESSION MEMORY PROTOCOL (NON-NEGOTIABLE)
+
+## At the Start of EVERY Session
+
+**BEFORE writing any code or making any changes:**
+
+1. Check if today's session file exists: `session-YYYY-MM-DD.md`
+2. If it exists, read it to understand what was done
+3. If it doesn't exist, CREATE IT immediately with the template below
+
+## During the Session
+
+**After EVERY significant change:**
+- Update the session file with what was done
+- Include file paths, decisions made, and results
+- Document any errors encountered and how they were fixed
+
+## At the End of the Session
+
+Update the session file with:
+- Final state of all features
+- What's working vs broken
+- Next steps for future sessions
+
+## Session File Template (MANDATORY)
+
+```markdown
+# Session Log: YYYY-MM-DD
+
+## Project Context
+- **Project:** [Name]
+- **Tool:** Claude Code
+- **Goal:** [Today's objective]
+
+## Starting State
+- **Branch:** [git branch]
+- **Last Working Feature:** [what was working]
+- **Known Issues:** [any bugs]
+
+## Session Progress
+
+### [HH:MM] — [Action Title]
+- What was done
+- Files changed: [list]
+- Result: [success/failure]
+
+## Lessons Learned
+- [Key insights from today]
+
+## End of Session State
+- **Working:** [what works now]
+- **Broken:** [what's broken]
+- **Next Steps:** [for next session]
+
+## Files Changed This Session
+- `path/to/file.py` — [what changed]
+```
+
+## Why This Matters
+
+**Without session logs:**
+- We lose context when sessions disconnect
+- We repeat work already done
+- We forget critical decisions
+- We can't debug issues that happened earlier
+
+**With session logs:**
+- Instant context recovery
+- Clear progress tracking
+- Decision history preserved
+- Easy handoff between sessions
+
+## Example Entry
+
+```markdown
+### [13:00] — Streamlit App Implementation
+
+**Files Created:**
+- `app/main.py` - Entry point with home page
+- `app/state.py` - Approval tracking functions
+
+**Key Decisions:**
+- Skip pipeline/ abstraction layer (over-engineering)
+- Use file-based state (projects/*/config.json)
+- Enforce sequential approval in UI
+
+**Result:** ✅ Foundation pages working, imports fixed
+```
+
+---
+
+**Tony's Rule:** If you're not updating the session file, you're not doing it right.
+
+---
+
+_Part of the AI App Factory documentation suite._  
+_Version: 1.1 | February 2026_
