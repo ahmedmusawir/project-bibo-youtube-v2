@@ -1,0 +1,7 @@
+[server]
+# Disable script runner timeout for long-running operations
+# (YouTube transcription can take 10-30 minutes)
+scriptRunnerTimeout = 0
+
+[browser]
+gatherUsageStats = false

@@ -13,6 +13,7 @@ import streamlit as st
 from pathlib import Path
 from app.components.sidebar import render_sidebar
 from app.state import get_project_path, stage_file_exists
+from app.utils import capture_stdout_to_streamlit
 
 
 # Page config
@@ -88,11 +89,25 @@ def main():
 
     with tab2:
         st.markdown("""
-        Enter a YouTube URL. The system will transcribe the video and generate a script from it.
-
-        ⚠️ **Note:** This feature requires additional implementation (transcription step).
-        For MVP, use the "Paste Text" tab to directly input your script.
+        Enter a YouTube URL. The system will download the audio and transcribe it.
+        Once the transcript is ready, head to the **Script** page to generate your script.
         """)
+
+        # Show existing transcript if present
+        transcript_file = project_path / "0_transcript.txt"
+        if transcript_file.exists():
+            transcript_text = transcript_file.read_text(encoding='utf-8')
+            word_count = len(transcript_text.split())
+            st.success(f"✅ Transcript ready — {word_count:,} words")
+            st.info("👉 Go to **Script** page to generate your script from this transcript")
+            with st.expander("📄 View Transcript", expanded=False):
+                st.text_area(
+                    "Transcript content",
+                    value=transcript_text,
+                    height=400,
+                    disabled=True,
+                    label_visibility="collapsed"
+                )
 
         youtube_url = st.text_input(
             "YouTube URL",
@@ -100,8 +115,36 @@ def main():
             key="youtube_url_input"
         )
 
-        if st.button("🎥 Transcribe Video", key="transcribe_btn", disabled=True):
-            st.info("⚠️ Transcription feature coming in Phase 2")
+        url_valid = youtube_url and ("youtube.com/watch" in youtube_url or "youtu.be/" in youtube_url)
+
+        if st.button("🎥 Transcribe Video", key="transcribe_btn", disabled=not url_valid, type="primary"):
+            # Force-load .env from project root so GOOGLE_STT_BUCKET etc. are available
+            from dotenv import load_dotenv
+            load_dotenv(project_root / ".env", override=True)
+
+            from src.transcription import transcribe_youtube_audio
+
+            transcript_path = str(project_path / "0_transcript.txt")
+
+            project_path.mkdir(parents=True, exist_ok=True)
+
+            st.info("⏳ This may take **10-30 minutes** for long videos. Do not close this page.")
+            log_container = st.empty()
+
+            with st.spinner("🔄 Transcribing... please wait"):
+                try:
+                    with capture_stdout_to_streamlit(log_container):
+                        transcribe_youtube_audio(youtube_url, transcript_path)
+
+                except Exception as e:
+                    st.error(f"❌ Error: {e}")
+
+            if Path(transcript_path).exists():
+                st.success("🎉 Transcription complete!")
+                st.rerun()
+
+        if youtube_url and not url_valid:
+            st.warning("Please enter a valid YouTube URL (e.g. https://www.youtube.com/watch?v=...)")
 
 
 if __name__ == "__main__":
