@@ -202,6 +202,16 @@ text/*
 # Google Cloud Service Account Key
 cyberize-vertex-api.json
 
+# Windows deployment - credentials
+credentials/*.json
+
+# Windows deployment - bundled tools (too large for git)
+tools/ffmpeg/*.exe
+tools/python/
+
+# Windows venv
+venv/
+
 # The output folder
 projects/
 
