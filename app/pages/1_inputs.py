@@ -13,7 +13,7 @@ import streamlit as st
 from pathlib import Path
 from app.components.sidebar import render_sidebar
 from app.state import get_project_path, stage_file_exists
-from app.utils import capture_stdout_to_streamlit
+from app.utils import capture_stdout_to_streamlit, show_process_log
 
 
 # Page config
@@ -43,12 +43,12 @@ def main():
     st.markdown(f"**Project:** {project_name}")
     st.markdown("---")
 
-    # Check if script already exists
-    script_exists = stage_file_exists(project_name, "script")
+    # Check if transcript already exists
+    transcript_exists = (project_path / "0_transcript.txt").exists()
 
-    if script_exists:
-        st.info("✅ Script already exists. You can view/edit it in the **Script** page.")
-        st.markdown("**Or paste new content below to replace it:**")
+    if transcript_exists:
+        st.info("✅ Transcript already exists. Go to **Script** page to generate your YouTube script.")
+        st.markdown("**Or provide new source material below to replace it:**")
 
     # Input section
     st.markdown("## Source Material")
@@ -58,13 +58,14 @@ def main():
 
     with tab1:
         st.markdown("""
-        Paste your text content below. This will be used to generate the video script.
+        Paste your source text below (article, blog post, raw transcript, etc.).
+        This will be saved as the transcript. Then go to the **Script** page to generate a YouTube script from it.
         """)
 
         text_content = st.text_area(
             "Text Content",
             height=300,
-            placeholder="Paste your article, blog post, or script here...",
+            placeholder="Paste your article, blog post, or raw transcript here...",
             help="Maximum 10,000 characters recommended",
             key="text_input"
         )
@@ -72,17 +73,17 @@ def main():
         char_count = len(text_content) if text_content else 0
         st.caption(f"Characters: {char_count:,}")
 
-        if st.button("💾 Save as Script", key="save_text_btn", type="primary"):
+        if st.button("💾 Save as Transcript", key="save_text_btn", type="primary"):
             if text_content and text_content.strip():
-                # Save to 1_summary.txt
-                script_file = project_path / "1_summary.txt"
-                script_file.parent.mkdir(parents=True, exist_ok=True)
+                # Save to 0_transcript.txt
+                transcript_file = project_path / "0_transcript.txt"
+                transcript_file.parent.mkdir(parents=True, exist_ok=True)
 
-                with open(script_file, 'w', encoding='utf-8') as f:
+                with open(transcript_file, 'w', encoding='utf-8') as f:
                     f.write(text_content.strip())
 
-                st.success(f"✅ Saved to `1_summary.txt` ({len(text_content.strip().split())} words)")
-                st.info("👉 Go to **Script** page to review and approve")
+                st.success(f"✅ Saved to `0_transcript.txt` ({len(text_content.strip().split())} words)")
+                st.info("👉 Go to **Script** page to generate your YouTube script")
 
             else:
                 st.error("Please paste some text content")
@@ -133,7 +134,7 @@ def main():
 
             with st.spinner("🔄 Transcribing... please wait"):
                 try:
-                    with capture_stdout_to_streamlit(log_container):
+                    with capture_stdout_to_streamlit(log_container, session_key="transcription_log"):
                         transcribe_youtube_audio(youtube_url, transcript_path)
 
                 except Exception as e:
@@ -142,6 +143,9 @@ def main():
             if Path(transcript_path).exists():
                 st.success("🎉 Transcription complete!")
                 st.rerun()
+
+        # Process Log
+        show_process_log("transcription_log", "📋 Transcription Log")
 
         if youtube_url and not url_valid:
             st.warning("Please enter a valid YouTube URL (e.g. https://www.youtube.com/watch?v=...)")

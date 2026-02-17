@@ -15,7 +15,6 @@ llm = ChatGoogleGenerativeAI(
     model=get_prompting_llm(),
     google_api_key=os.getenv("GOOGLE_API_KEY"),
     temperature=0.8,
-    max_output_tokens=1024,
 )
 
 def parse_metadata_output(raw_text: str) -> dict:

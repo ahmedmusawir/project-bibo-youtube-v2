@@ -8,14 +8,15 @@ import streamlit as st
 
 
 @contextlib.contextmanager
-def capture_stdout_to_streamlit(container):
+def capture_stdout_to_streamlit(container, session_key=None):
     """
     Context manager that captures print() output from pipeline functions
     and displays each line in a Streamlit container in real-time.
+    Optionally stores the captured log in st.session_state[session_key].
 
     Usage:
         log_container = st.empty()
-        with capture_stdout_to_streamlit(log_container):
+        with capture_stdout_to_streamlit(log_container, session_key="my_log"):
             some_pipeline_function(...)
     """
     class StreamlitWriter(io.TextIOBase):
@@ -33,6 +34,9 @@ def capture_stdout_to_streamlit(container):
         def flush(self):
             pass
 
+        def get_log(self):
+            return "\n".join(self._lines)
+
     writer = StreamlitWriter(container)
     old_stdout = sys.stdout
     sys.stdout = writer
@@ -40,3 +44,15 @@ def capture_stdout_to_streamlit(container):
         yield writer
     finally:
         sys.stdout = old_stdout
+        if session_key and writer._lines:
+            st.session_state[session_key] = writer.get_log()
+
+
+def show_process_log(session_key, label="📋 Process Log"):
+    """
+    Display a stored process log in a collapsible expander.
+    Call this on every page that runs a pipeline function.
+    """
+    if session_key in st.session_state and st.session_state[session_key]:
+        with st.expander(label, expanded=False):
+            st.code(st.session_state[session_key], language=None)

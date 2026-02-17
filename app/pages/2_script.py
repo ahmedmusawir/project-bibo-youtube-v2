@@ -18,6 +18,7 @@ from app.state import (
     get_approval_status,
     set_approval
 )
+from app.utils import capture_stdout_to_streamlit, show_process_log
 from src.summarization import summarize_transcript
 
 
@@ -54,31 +55,45 @@ def main():
     script_exists = stage_file_exists(project_name, "script")
 
     if not script_exists:
-        st.warning("⚠️ No script found. Please create one first:")
+        # Check if transcript exists
+        if transcript_file.exists():
+            transcript_text = transcript_file.read_text(encoding='utf-8')
+            word_count = len(transcript_text.split())
 
-        col1, col2 = st.columns(2)
+            st.success(f"✅ Transcript ready — **{word_count:,} words** (`0_transcript.txt`)")
 
-        with col1:
-            st.info("**Option 1:** Go to **Inputs** page and paste text directly")
+            with st.expander("📄 View Transcript", expanded=False):
+                st.text_area(
+                    "Transcript content",
+                    value=transcript_text,
+                    height=300,
+                    disabled=True,
+                    label_visibility="collapsed"
+                )
 
-        with col2:
-            # Check if transcript exists (for summarization)
-            if transcript_file.exists():
-                st.info("**Option 2:** Generate script from transcript below")
+            st.markdown("---")
+            st.markdown("### 🎬 Create YouTube Script")
+            st.markdown("Generate a polished YouTube script from your transcript using AI summarization.")
 
-                if st.button("🤖 Generate Script from Transcript", key="gen_script_btn", type="primary"):
-                    with st.spinner("Generating script with AI..."):
-                        try:
+            if st.button("🎬 Create YouTube Script", key="gen_script_btn", type="primary", use_container_width=True):
+                log_container = st.empty()
+                with st.spinner("Generating YouTube script from transcript..."):
+                    try:
+                        with capture_stdout_to_streamlit(log_container, session_key="script_gen_log"):
                             summarize_transcript(
                                 str(transcript_file),
                                 str(script_file)
                             )
-                            st.success("✅ Script generated successfully!")
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"❌ Error generating script: {str(e)}")
-            else:
-                st.info("**Option 2:** Generate script from transcript (transcript not found)")
+                        st.success("✅ YouTube script created!")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"❌ Error generating script: {str(e)}")
+
+            show_process_log("script_gen_log", "📋 Script Generation Log")
+
+        else:
+            st.warning("⚠️ No transcript found. Please create one first.")
+            st.info("👈 Go to **Inputs** page to paste text or transcribe a YouTube video")
 
         return
 
@@ -144,12 +159,14 @@ def main():
         with col2:
             if st.button("🔄 Regenerate Script", key="regen_script_btn"):
                 if transcript_file.exists():
+                    log_container = st.empty()
                     with st.spinner("Regenerating script..."):
                         try:
-                            summarize_transcript(
-                                str(transcript_file),
-                                str(script_file)
-                            )
+                            with capture_stdout_to_streamlit(log_container, session_key="script_gen_log"):
+                                summarize_transcript(
+                                    str(transcript_file),
+                                    str(script_file)
+                                )
                             set_approval(project_name, "script", False)
                             st.success("✅ Script regenerated! Review and approve below.")
                             st.rerun()
@@ -174,6 +191,9 @@ def main():
         """, unsafe_allow_html=True)
 
     st.markdown("---")
+
+    # Process Log
+    show_process_log("script_gen_log", "📋 Script Generation Log")
 
     # Approval Section
     st.markdown("## Approval")

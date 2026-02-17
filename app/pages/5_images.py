@@ -18,6 +18,7 @@ from app.state import (
     get_approval_status,
     set_approval
 )
+from app.utils import capture_stdout_to_streamlit, show_process_log
 from src.image_prompting import generate_image_prompts
 from src.image_creation import create_images_from_prompts
 
@@ -71,13 +72,15 @@ def main():
         st.info("💡 Generate AI prompts for images that will sync with your audio")
 
         if st.button("🤖 Generate Image Prompts", key="gen_prompts_btn", type="primary", use_container_width=True):
+            log_container = st.empty()
             with st.spinner("Generating image prompts from script..."):
                 try:
-                    generate_image_prompts(
-                        str(script_file),
-                        str(audio_file),
-                        str(prompts_file)
-                    )
+                    with capture_stdout_to_streamlit(log_container, session_key="prompts_gen_log"):
+                        generate_image_prompts(
+                            str(script_file),
+                            str(audio_file),
+                            str(prompts_file)
+                        )
 
                     st.success("✅ Image prompts generated!")
                     st.rerun()
@@ -106,13 +109,15 @@ def main():
             st.success(f"✅ {len(prompts_list)} image prompts ready")
         with col2:
             if st.button("🔄 Regenerate", key="regen_prompts_btn"):
+                log_container = st.empty()
                 with st.spinner("Regenerating prompts..."):
                     try:
-                        generate_image_prompts(
-                            str(script_file),
-                            str(audio_file),
-                            str(prompts_file)
-                        )
+                        with capture_stdout_to_streamlit(log_container, session_key="prompts_gen_log"):
+                            generate_image_prompts(
+                                str(script_file),
+                                str(audio_file),
+                                str(prompts_file)
+                            )
                         st.success("✅ Prompts regenerated!")
                         st.rerun()
                     except Exception as e:
@@ -131,19 +136,14 @@ def main():
             st.warning("⚠️ **Note:** Image generation can take 5-10 minutes depending on the number of images")
 
             if st.button("🎨 Generate Images", key="gen_images_btn", type="primary", use_container_width=True):
+                log_container = st.empty()
                 with st.spinner(f"Generating {len(prompts_list)} images... This may take several minutes..."):
-                    progress_bar = st.progress(0)
-                    status_text = st.empty()
-
                     try:
-                        # Generate images
-                        create_images_from_prompts(
-                            str(prompts_file),
-                            str(images_dir)
-                        )
-
-                        progress_bar.progress(100)
-                        status_text.empty()
+                        with capture_stdout_to_streamlit(log_container, session_key="images_gen_log"):
+                            create_images_from_prompts(
+                                str(prompts_file),
+                                str(images_dir)
+                            )
 
                         st.success(f"✅ {len(prompts_list)} images generated!")
                         st.balloons()
@@ -164,12 +164,14 @@ def main():
                 st.success(f"✅ {len(image_files)} images generated")
             with col2:
                 if st.button("🔄 Regenerate", key="regen_images_btn"):
+                    log_container = st.empty()
                     with st.spinner("Regenerating images..."):
                         try:
-                            create_images_from_prompts(
-                                str(prompts_file),
-                                str(images_dir)
-                            )
+                            with capture_stdout_to_streamlit(log_container, session_key="images_gen_log"):
+                                create_images_from_prompts(
+                                    str(prompts_file),
+                                    str(images_dir)
+                                )
 
                             # Reset approval
                             set_approval(project_name, "images", False)
@@ -194,6 +196,10 @@ def main():
                             st.image(str(img_file), use_container_width=True, caption=f"Image {idx + 1}")
 
             st.markdown("---")
+
+            # Process Logs
+            show_process_log("prompts_gen_log", "📋 Image Prompts Generation Log")
+            show_process_log("images_gen_log", "📋 Image Creation Log")
 
             # Approval Section
             is_approved = get_approval_status(project_name, "images")

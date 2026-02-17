@@ -21,7 +21,6 @@ llm = ChatGoogleGenerativeAI(
     model=get_prompting_llm(),
     google_api_key=os.getenv("GOOGLE_API_KEY"),
     temperature=0.8,
-    max_output_tokens=8192,
 )
 
 def _calculate_num_images(audio_path: str, seconds_per_image: int) -> int:

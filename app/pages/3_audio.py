@@ -18,6 +18,7 @@ from app.state import (
     get_approval_status,
     set_approval
 )
+from app.utils import capture_stdout_to_streamlit, show_process_log
 from src.text_to_speech import synthesize_speech
 from src.utils.config import (
     get_tts_voice,
@@ -125,6 +126,7 @@ def main():
         st.info("💡 Click the button below to generate narration audio from your script")
 
         if st.button("🎵 Generate Audio", key="gen_audio_btn", type="primary", use_container_width=True):
+            log_container = st.empty()
             with st.spinner(f"Generating audio with {selected_voice_info['label']}..."):
                 try:
                     # Update voice config before generation
@@ -132,10 +134,11 @@ def main():
                         set_tts_voice(selected_voice_id, selected_voice_info['lang'])
 
                     # Generate audio
-                    synthesize_speech(
-                        str(script_file),
-                        str(audio_file)
-                    )
+                    with capture_stdout_to_streamlit(log_container, session_key="audio_gen_log"):
+                        synthesize_speech(
+                            str(script_file),
+                            str(audio_file)
+                        )
 
                     st.success("✅ Audio generated successfully!")
                     st.balloons()
@@ -181,6 +184,7 @@ def main():
 
         with col2:
             if st.button("🔄 Regenerate Audio", key="regen_audio_btn"):
+                log_container = st.empty()
                 with st.spinner("Regenerating audio..."):
                     try:
                         # Update voice if changed
@@ -188,10 +192,11 @@ def main():
                             set_tts_voice(selected_voice_id, selected_voice_info['lang'])
 
                         # Regenerate
-                        synthesize_speech(
-                            str(script_file),
-                            str(audio_file)
-                        )
+                        with capture_stdout_to_streamlit(log_container, session_key="audio_gen_log"):
+                            synthesize_speech(
+                                str(script_file),
+                                str(audio_file)
+                            )
 
                         # Reset approval
                         set_approval(project_name, "audio", False)
@@ -203,6 +208,9 @@ def main():
                         st.error(f"❌ Error: {str(e)}")
 
         st.markdown("---")
+
+        # Process Log
+        show_process_log("audio_gen_log", "📋 Audio Generation Log")
 
         # Approval Section
         st.markdown("## ✅ Approval")

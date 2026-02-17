@@ -18,6 +18,7 @@ from app.state import (
     get_approval_status,
     set_approval
 )
+from app.utils import capture_stdout_to_streamlit, show_process_log
 from src.video_composition import compose_video
 
 
@@ -76,16 +77,18 @@ def main():
     if not video_exists:
         st.info("💡 Compose the final video by combining audio narration and AI-generated images")
 
-        st.warning("⚠️ **Note:** Video composition can take 2-5 minutes")
+        st.warning("⚠️ **Note:** Video composition can take 10-15 minutes for longer videos")
 
         if st.button("🎬 Compose Video", key="compose_video_btn", type="primary", use_container_width=True):
-            with st.spinner("Composing video... This may take several minutes..."):
+            log_container = st.empty()
+            with st.spinner("Composing video... This may take 10-15 minutes..."):
                 try:
-                    compose_video(
-                        str(images_dir),
-                        str(audio_file),
-                        str(video_file)
-                    )
+                    with capture_stdout_to_streamlit(log_container, session_key="video_gen_log"):
+                        compose_video(
+                            str(images_dir),
+                            str(audio_file),
+                            str(video_file)
+                        )
 
                     st.success("✅ Video composed successfully!")
                     st.balloons()
@@ -131,13 +134,15 @@ def main():
             st.markdown("### 🔄 Regenerate")
 
             if st.button("🔄 Regenerate Video", key="regen_video_btn", use_container_width=True):
-                with st.spinner("Regenerating video..."):
+                log_container = st.empty()
+                with st.spinner("Regenerating video... This may take 10-15 minutes..."):
                     try:
-                        compose_video(
-                            str(images_dir),
-                            str(audio_file),
-                            str(video_file)
-                        )
+                        with capture_stdout_to_streamlit(log_container, session_key="video_gen_log"):
+                            compose_video(
+                                str(images_dir),
+                                str(audio_file),
+                                str(video_file)
+                            )
 
                         # Reset approval
                         set_approval(project_name, "video", False)
@@ -164,6 +169,9 @@ def main():
             )
 
         st.markdown("---")
+
+        # Process Log
+        show_process_log("video_gen_log", "📋 Video Composition Log")
 
         # Approval Section
         st.markdown("## ✅ Final Approval")

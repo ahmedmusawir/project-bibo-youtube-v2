@@ -19,6 +19,7 @@ from app.state import (
     get_approval_status,
     set_approval
 )
+from app.utils import capture_stdout_to_streamlit, show_process_log
 from src.metadata_generation import generate_metadata
 
 
@@ -71,12 +72,14 @@ def main():
         st.info("💡 Generate YouTube-optimized titles, descriptions, and hashtags from your script")
 
         if st.button("🤖 Generate Metadata", key="gen_metadata_btn", type="primary", use_container_width=True):
+            log_container = st.empty()
             with st.spinner("Generating metadata with AI..."):
                 try:
-                    generate_metadata(
-                        str(script_file),
-                        str(metadata_file)
-                    )
+                    with capture_stdout_to_streamlit(log_container, session_key="metadata_gen_log"):
+                        generate_metadata(
+                            str(script_file),
+                            str(metadata_file)
+                        )
 
                     st.success("✅ Metadata generated successfully!")
                     st.balloons()
@@ -172,12 +175,14 @@ def main():
 
             with col2:
                 if st.button("🔄 Regenerate", key="regen_metadata_btn"):
+                    log_container = st.empty()
                     with st.spinner("Regenerating metadata..."):
                         try:
-                            generate_metadata(
-                                str(script_file),
-                                str(metadata_file)
-                            )
+                            with capture_stdout_to_streamlit(log_container, session_key="metadata_gen_log"):
+                                generate_metadata(
+                                    str(script_file),
+                                    str(metadata_file)
+                                )
 
                             set_approval(project_name, "metadata", False)
                             st.success("✅ Metadata regenerated!")
@@ -187,6 +192,9 @@ def main():
                             st.error(f"❌ Error: {str(e)}")
 
             st.markdown("---")
+
+            # Process Log
+            show_process_log("metadata_gen_log", "📋 Metadata Generation Log")
 
             # Approval Section
             st.markdown("## ✅ Approval")
