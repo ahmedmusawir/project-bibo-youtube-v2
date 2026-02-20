@@ -10,7 +10,7 @@ vidgen/
 ├── credentials/            # Google Cloud service account key (you provide)
 ├── tools/
 │   ├── ffmpeg/             # ffmpeg.exe, ffplay.exe, ffprobe.exe
-│   └── python/             # Embeddable Python 3.10 runtime
+│   └── python/             # Embeddable Python 3.12.3 runtime
 ├── projects/               # Your video projects (created automatically)
 ├── .env                    # API keys and settings (created by INSTALL.bat)
 ├── INSTALL.bat             # One-time setup script

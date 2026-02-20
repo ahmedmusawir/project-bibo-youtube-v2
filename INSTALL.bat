@@ -21,8 +21,8 @@ if exist "tools\python\python.exe" (
 ) else (
     echo   ERROR: Embeddable Python not found at tools\python\python.exe
     echo.
-    echo   Please download Python 3.10 embeddable package from:
-    echo   https://www.python.org/ftp/python/3.10.11/python-3.10.11-embed-amd64.zip
+    echo   Please download Python 3.12 embeddable package from:
+    echo   https://www.python.org/ftp/python/3.12.3/python-3.12.3-embed-amd64.zip
     echo.
     echo   Extract the contents into the tools\python\ folder so that
     echo   tools\python\python.exe exists.
