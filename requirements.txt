@@ -92,3 +92,7 @@ zstandard==0.23.0
 google-cloud-texttospeech
 google-cloud-speech
 streamlit>=1.31.0
+langchain-core>=0.1.27
+langchain-community>=0.0.24
+langchain-google-genai>=0.0.8
+moviepy>=2.2.1

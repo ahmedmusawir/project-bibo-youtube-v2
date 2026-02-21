@@ -41,6 +41,11 @@ def render_sidebar():
             selected_project = None
             st.session_state.current_project = None
 
+        # Show success toast after project creation
+        if st.session_state.get("_project_created"):
+            st.success(f"✅ Project '{st.session_state._project_created}' created!")
+            del st.session_state["_project_created"]
+
         # New Project Input
         with st.expander("➕ Create New Project"):
             new_project_name = st.text_input(
@@ -51,10 +56,14 @@ def render_sidebar():
 
             if st.button("Create Project", key="create_project_btn"):
                 if new_project_name and new_project_name.strip():
-                    create_project(new_project_name.strip())
-                    st.session_state.current_project = new_project_name.strip()
-                    st.success(f"✅ Created '{new_project_name}'")
-                    st.rerun()
+                    try:
+                        create_project(new_project_name.strip())
+                        st.session_state.current_project = new_project_name.strip()
+                        st.session_state["_project_created"] = new_project_name.strip()
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"❌ Failed to create project: {e}")
+                        st.code(str(e))
                 else:
                     st.error("Please enter a project name")
 

@@ -121,9 +121,7 @@ def main():
 
         # Video Player
         with open(video_file, 'rb') as f:
-            video_bytes = f.read()
-
-        st.video(video_bytes)
+            st.video(f.read())
 
         st.markdown("---")
 
@@ -158,11 +156,11 @@ def main():
 
             # Download button
             with open(video_file, 'rb') as f:
-                video_bytes = f.read()
+                video_bytes_dl = f.read()
 
             st.download_button(
                 label="⬇️ Download Video",
-                data=video_bytes,
+                data=video_bytes_dl,
                 file_name=f"{project_name}_final.mp4",
                 mime="video/mp4",
                 use_container_width=True
