@@ -167,6 +167,92 @@ def main():
 
             st.markdown("---")
 
+            # YouTube Thumbnail Section
+            st.markdown("### 🎨 YouTube Thumbnail")
+            
+            thumbnail_file = project_path / "4_thumbnail.png"
+            thumbnail_exists = thumbnail_file.exists()
+            
+            if not thumbnail_exists:
+                st.info("💡 Generate an AI-powered YouTube thumbnail with catchy text overlay")
+                
+                if st.button("🎨 Generate Thumbnail", key="gen_thumbnail_btn", type="secondary", use_container_width=True):
+                    log_container = st.empty()
+                    with st.spinner("Generating thumbnail with AI... (this may take 30-60 seconds)"):
+                        try:
+                            # Lazy import to avoid loading if not needed
+                            from src.thumbnail_generation import create_thumbnail
+                            
+                            with capture_stdout_to_streamlit(log_container, session_key="thumbnail_gen_log"):
+                                result = create_thumbnail(
+                                    str(metadata_file),
+                                    str(thumbnail_file)
+                                )
+                            
+                            st.success(f"✅ Thumbnail generated with text: **{result['thumbnail_text']}**")
+                            st.balloons()
+                            st.rerun()
+                            
+                        except Exception as e:
+                            st.error(f"❌ Error generating thumbnail: {str(e)}")
+                            st.exception(e)
+            else:
+                # Display existing thumbnail
+                st.image(str(thumbnail_file), use_container_width=True)
+                
+                # Load thumbnail metadata if available
+                thumbnail_metadata_file = project_path / "4_thumbnail_metadata.json"
+                if thumbnail_metadata_file.exists():
+                    try:
+                        with open(thumbnail_metadata_file, 'r', encoding='utf-8') as f:
+                            thumb_meta = json.load(f)
+                        
+                        st.markdown(f"**Text Overlay:** {thumb_meta.get('thumbnail_text', 'N/A')}")
+                        
+                        with st.expander("📋 View Image Prompt"):
+                            st.code(thumb_meta.get('image_prompt', 'N/A'), language=None)
+                    except:
+                        pass
+                
+                # Download button
+                with open(thumbnail_file, 'rb') as f:
+                    thumbnail_bytes = f.read()
+                
+                col1, col2 = st.columns([1, 1])
+                with col1:
+                    st.download_button(
+                        label="⬇️ Download Thumbnail",
+                        data=thumbnail_bytes,
+                        file_name=f"{project_name}_thumbnail.png",
+                        mime="image/png",
+                        key="download_thumbnail_btn",
+                        use_container_width=True
+                    )
+                
+                with col2:
+                    if st.button("🔄 Regenerate Thumbnail", key="regen_thumbnail_btn", use_container_width=True):
+                        log_container = st.empty()
+                        with st.spinner("Regenerating thumbnail..."):
+                            try:
+                                from src.thumbnail_generation import create_thumbnail
+                                
+                                with capture_stdout_to_streamlit(log_container, session_key="thumbnail_gen_log"):
+                                    result = create_thumbnail(
+                                        str(metadata_file),
+                                        str(thumbnail_file)
+                                    )
+                                
+                                st.success(f"✅ Thumbnail regenerated with text: **{result['thumbnail_text']}**")
+                                st.rerun()
+                                
+                            except Exception as e:
+                                st.error(f"❌ Error: {str(e)}")
+            
+            # Show thumbnail generation log if available
+            show_process_log("thumbnail_gen_log", "📋 Thumbnail Generation Log")
+
+            st.markdown("---")
+
             # Regenerate Section
             col1, col2 = st.columns([4, 1])
 
