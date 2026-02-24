@@ -5,10 +5,8 @@ echo "🚀 Starting VidGen Streamlit App..."
 echo "📂 Project: $(pwd)"
 echo ""
 
-# Activate virtual environment
-source .venv/bin/activate
-
 # Add project root to PYTHONPATH
 export PYTHONPATH="${PYTHONPATH}:$(pwd)"
 
-streamlit run app/main.py
+# Run streamlit using venv's python directly (bypasses pyenv shims)
+.venv/bin/python -m streamlit run app/main.py
