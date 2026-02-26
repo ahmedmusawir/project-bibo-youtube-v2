@@ -20,7 +20,12 @@ from app.state import (
     set_approval
 )
 from app.utils import capture_stdout_to_streamlit, show_process_log
-from src.metadata_generation import generate_metadata
+from src.metadata_generation import generate_metadata, regenerate_titles, regenerate_description
+from src.utils.config import (
+    get_prompting_llm,
+    get_available_prompting_llms,
+    set_prompting_llm
+)
 
 
 # Page config
@@ -50,6 +55,40 @@ def main():
     # Page header
     st.markdown(f"# 📋 Metadata")
     st.markdown(f"**Project:** {project_name}")
+    st.markdown("---")
+
+    # LLM Model Configuration Section
+    st.markdown("## 🤖 AI Model Configuration")
+    st.markdown("*Used for generating titles, descriptions, hashtags, and thumbnails*")
+    
+    # Get available models
+    available_models = get_available_prompting_llms()
+    current_model = get_prompting_llm()
+    
+    # Create model selector
+    try:
+        current_index = available_models.index(current_model)
+    except ValueError:
+        current_index = 0
+    
+    selected_model = st.selectbox(
+        "Select Prompting Model",
+        available_models,
+        index=current_index,
+        key="prompting_model_selector"
+    )
+    
+    # Display model info and save button
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.info(f"**Selected:** {selected_model}")
+    with col2:
+        if selected_model != current_model:
+            if st.button("💾 Save Model", key="save_prompting_model_btn"):
+                set_prompting_llm(selected_model)
+                st.success("✅ Model saved to config")
+                st.rerun()
+    
     st.markdown("---")
 
     # Check prerequisites
@@ -107,7 +146,24 @@ def main():
                 }
 
             # Display Metadata
-            st.markdown("### 📌 Title Options")
+            col_title, col_regen = st.columns([5, 1])
+            with col_title:
+                st.markdown("### 📌 Title Options")
+            with col_regen:
+                if st.button("🔄", key="regen_titles_btn", help="Regenerate titles"):
+                    log_container = st.empty()
+                    with st.spinner("Regenerating titles..."):
+                        try:
+                            with capture_stdout_to_streamlit(log_container, session_key="metadata_gen_log"):
+                                new_titles = regenerate_titles(
+                                    str(script_file),
+                                    str(metadata_file)
+                                )
+                            st.success(f"✅ {len(new_titles)} new titles generated!")
+                            set_approval(project_name, "metadata", False)
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"❌ Error: {str(e)}")
 
             if metadata.get("titles"):
                 for i, title in enumerate(metadata["titles"], 1):
@@ -119,7 +175,24 @@ def main():
             st.markdown("---")
 
             # Description
-            st.markdown("### 📄 Description")
+            col_desc, col_regen_desc = st.columns([5, 1])
+            with col_desc:
+                st.markdown("### 📄 Description")
+            with col_regen_desc:
+                if st.button("🔄", key="regen_desc_btn", help="Regenerate description"):
+                    log_container = st.empty()
+                    with st.spinner("Regenerating description..."):
+                        try:
+                            with capture_stdout_to_streamlit(log_container, session_key="metadata_gen_log"):
+                                new_description = regenerate_description(
+                                    str(script_file),
+                                    str(metadata_file)
+                                )
+                            st.success("✅ Description regenerated!")
+                            set_approval(project_name, "metadata", False)
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"❌ Error: {str(e)}")
 
             description = metadata.get("description", "")
             if description:
@@ -152,16 +225,8 @@ def main():
 
             if metadata.get("hashtags"):
                 hashtags_str = " ".join(metadata["hashtags"])
-                st.markdown(f"""
-                <div style="
-                    background-color: #f0f7ff;
-                    padding: 1rem;
-                    border-radius: 0.5rem;
-                    font-size: 1.1rem;
-                ">
-                    {hashtags_str}
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown("**Click the copy icon (top-right of box) to copy:**")
+                st.code(hashtags_str, language=None)
             else:
                 st.info("No hashtags generated")
 

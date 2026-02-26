@@ -101,3 +101,88 @@ def generate_metadata(summary_path: str, output_path: str) -> str:
     print(f"✅ Metadata generation complete. Saved to: {output_path}")
     return output_path
 
+
+def regenerate_titles(summary_path: str, metadata_path: str) -> list:
+    """
+    Regenerate only the titles section of metadata.
+    
+    Args:
+        summary_path (str): Path to the summary file
+        metadata_path (str): Path to the existing metadata JSON file
+        
+    Returns:
+        list: New list of titles
+    """
+    print(f"-> Loading summary from: {summary_path}")
+    summary_text = Path(summary_path).read_text(encoding="utf-8").strip()
+    
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", (
+            "You are a YouTube content strategist. Generate 5 SEO-friendly, clickable YouTube video titles "
+            "based on the following video summary. Make them engaging and optimized for clicks.\n"
+            "Format: Return only the titles, one per line, starting with a dash (-)."
+        )),
+        ("user", "{context}")
+    ])
+    
+    print("-> Generating new titles...")
+    chain = prompt | llm | StrOutputParser()
+    raw_result = chain.invoke({"context": summary_text})
+    
+    # Parse titles
+    new_titles = [line.lstrip("- ").strip() for line in raw_result.splitlines() if line.strip().startswith("-")]
+    
+    # Load existing metadata and update titles
+    with open(metadata_path, 'r', encoding='utf-8') as f:
+        metadata = json.load(f)
+    
+    metadata["titles"] = new_titles
+    
+    # Save updated metadata
+    with open(metadata_path, 'w', encoding='utf-8') as f:
+        json.dump(metadata, f, indent=2, ensure_ascii=False)
+    
+    print(f"✅ Titles regenerated: {len(new_titles)} new titles")
+    return new_titles
+
+
+def regenerate_description(summary_path: str, metadata_path: str) -> str:
+    """
+    Regenerate only the description section of metadata.
+    
+    Args:
+        summary_path (str): Path to the summary file
+        metadata_path (str): Path to the existing metadata JSON file
+        
+    Returns:
+        str: New description
+    """
+    print(f"-> Loading summary from: {summary_path}")
+    summary_text = Path(summary_path).read_text(encoding="utf-8").strip()
+    
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", (
+            "You are a YouTube content strategist. Generate an engaging, informative YouTube video description "
+            "based on the following video summary. The description should be 100-300 words long and optimized for SEO.\n"
+            "Format: Return only the description text, no headers or labels."
+        )),
+        ("user", "{context}")
+    ])
+    
+    print("-> Generating new description...")
+    chain = prompt | llm | StrOutputParser()
+    new_description = chain.invoke({"context": summary_text})
+    
+    # Load existing metadata and update description
+    with open(metadata_path, 'r', encoding='utf-8') as f:
+        metadata = json.load(f)
+    
+    metadata["description"] = new_description.strip()
+    
+    # Save updated metadata
+    with open(metadata_path, 'w', encoding='utf-8') as f:
+        json.dump(metadata, f, indent=2, ensure_ascii=False)
+    
+    print(f"✅ Description regenerated")
+    return new_description.strip()
+

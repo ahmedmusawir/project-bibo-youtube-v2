@@ -21,6 +21,14 @@ from app.state import (
 from app.utils import capture_stdout_to_streamlit, show_process_log
 from src.image_prompting import generate_image_prompts
 from src.image_creation import create_images_from_prompts
+from src.utils.config import (
+    get_prompting_llm,
+    get_available_prompting_llms,
+    set_prompting_llm,
+    get_image_gen_model,
+    get_available_image_gen_models,
+    set_image_gen_model
+)
 
 
 # Page config
@@ -52,6 +60,65 @@ def main():
     # Page header
     st.markdown(f"# 🖼️ Images")
     st.markdown(f"**Project:** {project_name}")
+    st.markdown("---")
+
+    # AI Model Configuration Section
+    st.markdown("## 🤖 AI Model Configuration")
+    
+    # Image Prompting LLM Selector
+    st.markdown("### Image Prompt Generation Model")
+    available_prompting_models = get_available_prompting_llms()
+    current_prompting_model = get_prompting_llm()
+    
+    try:
+        current_prompting_index = available_prompting_models.index(current_prompting_model)
+    except ValueError:
+        current_prompting_index = 0
+    
+    selected_prompting_model = st.selectbox(
+        "Select Prompting Model",
+        available_prompting_models,
+        index=current_prompting_index,
+        key="image_prompting_model_selector"
+    )
+    
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.info(f"**Selected:** {selected_prompting_model}")
+    with col2:
+        if selected_prompting_model != current_prompting_model:
+            if st.button("💾 Save", key="save_prompting_model_btn"):
+                set_prompting_llm(selected_prompting_model)
+                st.success("✅ Model saved")
+                st.rerun()
+    
+    # Image Generation Model Selector
+    st.markdown("### Image Generation Model")
+    available_image_models = get_available_image_gen_models()
+    current_image_model = get_image_gen_model()
+    
+    try:
+        current_image_index = available_image_models.index(current_image_model)
+    except ValueError:
+        current_image_index = 0
+    
+    selected_image_model = st.selectbox(
+        "Select Image Generation Model",
+        available_image_models,
+        index=current_image_index,
+        key="image_gen_model_selector"
+    )
+    
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.info(f"**Selected:** {selected_image_model}")
+    with col2:
+        if selected_image_model != current_image_model:
+            if st.button("💾 Save", key="save_image_model_btn"):
+                set_image_gen_model(selected_image_model)
+                st.success("✅ Model saved")
+                st.rerun()
+    
     st.markdown("---")
 
     # Check prerequisites

@@ -9,7 +9,7 @@
     ]
   },
   "llm_prompting": {
-    "current": "gemini-2.5-flash",
+    "current": "gemini-3-flash-preview",
     "available": [
       "gemini-3-flash-preview",
       "gemini-2.5-pro",
@@ -43,7 +43,7 @@
     ]
   },
   "image_gen": {
-    "current": "imagen-4.0-ultra-generate-001",
+    "current": "imagen-4.0-fast-generate-001",
     "available": [
       "imagen-4.0-ultra-generate-001",
       "imagen-4.0-generate-001",

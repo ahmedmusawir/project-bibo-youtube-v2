@@ -20,6 +20,11 @@ from app.state import (
 )
 from app.utils import capture_stdout_to_streamlit, show_process_log
 from src.summarization import summarize_transcript
+from src.utils.config import (
+    get_summarization_llm,
+    get_available_summarization_llms,
+    set_summarization_llm
+)
 
 
 # Page config
@@ -49,6 +54,39 @@ def main():
     # Page header
     st.markdown(f"# 📄 Script")
     st.markdown(f"**Project:** {project_name}")
+    st.markdown("---")
+
+    # LLM Model Configuration Section
+    st.markdown("## 🤖 AI Model Configuration")
+    
+    # Get available models
+    available_models = get_available_summarization_llms()
+    current_model = get_summarization_llm()
+    
+    # Create model selector
+    try:
+        current_index = available_models.index(current_model)
+    except ValueError:
+        current_index = 0
+    
+    selected_model = st.selectbox(
+        "Select Summarization Model",
+        available_models,
+        index=current_index,
+        key="summarization_model_selector"
+    )
+    
+    # Display model info and save button
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.info(f"**Selected:** {selected_model}")
+    with col2:
+        if selected_model != current_model:
+            if st.button("💾 Save Model", key="save_model_btn"):
+                set_summarization_llm(selected_model)
+                st.success("✅ Model saved to config")
+                st.rerun()
+    
     st.markdown("---")
 
     # Check if script exists
