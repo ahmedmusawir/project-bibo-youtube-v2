@@ -24,19 +24,26 @@ def _download_audio_to_temp(url: str) -> str:
     temp_audio_path = os.path.join(temp_dir, "temp_audio_for_transcription.mp3")
     
     ydl_opts = {
-        'format': 'bestaudio/best',
-        # Use a fixed name in a temp directory
-        'outtmpl': os.path.join(temp_dir, "temp_audio_for_transcription"),
-        'postprocessors': [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'mp3',
-            'preferredquality': '192',
-        }],
-        'quiet': True,
-        'overwrite': True, # Overwrite if the file exists
+        'format': 'bestaudio*',  # Accept any audio format
+        'outtmpl': os.path.join(temp_dir, "temp_audio_for_transcription.%(ext)s"),
+        'quiet': False,
+        'no_warnings': False,
     }
+    
     with YoutubeDL(ydl_opts) as ydl:
-        ydl.download([url])
+        info = ydl.extract_info(url, download=True)
+        downloaded_file = ydl.prepare_filename(info)
+    
+    # Convert to mp3 if not already
+    if not downloaded_file.endswith('.mp3'):
+        from pydub import AudioSegment
+        audio = AudioSegment.from_file(downloaded_file)
+        audio.export(temp_audio_path, format='mp3', bitrate='192k')
+        # Clean up original file
+        if os.path.exists(downloaded_file):
+            os.remove(downloaded_file)
+    else:
+        temp_audio_path = downloaded_file
     
     return temp_audio_path
 
