@@ -24,7 +24,10 @@ from src.metadata_generation import generate_metadata, regenerate_titles, regene
 from src.utils.config import (
     get_prompting_llm,
     get_available_prompting_llms,
-    set_prompting_llm
+    set_prompting_llm,
+    get_image_gen_model,
+    get_available_image_gen_models,
+    set_image_gen_model
 )
 
 
@@ -234,6 +237,34 @@ def main():
 
             # YouTube Thumbnail Section
             st.markdown("### 🎨 YouTube Thumbnail")
+            
+            # Image Model Selector for Thumbnails
+            st.markdown("**Image Generation Model:**")
+            available_image_models = get_available_image_gen_models()
+            current_image_model = get_image_gen_model()
+            
+            try:
+                current_image_index = available_image_models.index(current_image_model)
+            except ValueError:
+                current_image_index = 0
+            
+            col_model, col_save = st.columns([3, 1])
+            with col_model:
+                selected_image_model = st.selectbox(
+                    "Select Image Model",
+                    available_image_models,
+                    index=current_image_index,
+                    key="thumbnail_image_model_selector",
+                    label_visibility="collapsed"
+                )
+            with col_save:
+                if selected_image_model != current_image_model:
+                    if st.button("💾 Save", key="save_thumbnail_image_model_btn"):
+                        set_image_gen_model(selected_image_model)
+                        st.success("✅ Model saved")
+                        st.rerun()
+            
+            st.markdown("---")
             
             thumbnail_file = project_path / "4_thumbnail.png"
             thumbnail_exists = thumbnail_file.exists()

@@ -19,11 +19,22 @@ def render_sidebar():
 
         # Project selector
         if projects:
-            # Use current_project from session_state as source of truth
-            if "current_project" not in st.session_state or st.session_state.current_project not in projects:
+            # Initialize current_project if not set
+            if "current_project" not in st.session_state:
+                st.session_state.current_project = projects[0]
+            
+            # If current project is not in the list (e.g., deleted), reset to first project
+            # But don't override if we just created a new project
+            elif st.session_state.current_project not in projects:
                 st.session_state.current_project = projects[0]
 
-            current_index = projects.index(st.session_state.current_project)
+            # Safely get the index of current project
+            try:
+                current_index = projects.index(st.session_state.current_project)
+            except ValueError:
+                # Fallback if project not found (shouldn't happen but be safe)
+                current_index = 0
+                st.session_state.current_project = projects[0]
 
             selected_project = st.selectbox(
                 "Select Project",
@@ -60,6 +71,9 @@ def render_sidebar():
                         create_project(new_project_name.strip())
                         st.session_state.current_project = new_project_name.strip()
                         st.session_state["_project_created"] = new_project_name.strip()
+                        # Clear the selector widget to force refresh
+                        if "project_selector" in st.session_state:
+                            del st.session_state["project_selector"]
                         st.rerun()
                     except Exception as e:
                         st.error(f"❌ Failed to create project: {e}")
