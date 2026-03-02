@@ -181,6 +181,12 @@ show_process_log("script_gen_log", "📋 Script Generation Log")
 
 ### `app/pages/2_script.py` — Script
 
+**Model Configuration Section:**
+- AI model selector at top of page (below project header)
+- Dropdown shows available summarization LLM models from `config.json`
+- Save button appears when selection differs from current model
+- Models: gemini-3-flash-preview, gemini-3-pro-preview, gemini-2.5-pro, gemini-2.5-flash
+
 **Pre-generation state:**
 - Shows transcript preview (word count + collapsible view)
 - "🎬 Create YouTube Script" button → calls `summarize_transcript()`
@@ -199,9 +205,15 @@ show_process_log("script_gen_log", "📋 Script Generation Log")
 
 **Prerequisites check:** Script must exist AND be approved.
 
+**Voice Configuration Section:**
+- Voice selector at top of page
+- Dropdown shows available TTS voices from `config.json`
+- Displays voice label and language
+- Save button appears when selection differs from current voice
+- Voices: Studio-O (Female), Studio-M (Male), Neural2-D (Male), Neural2-F (Female)
+
 **Pre-generation state:**
 - Shows script preview
-- Voice/language selector (reads from `config.json`, saves on change)
 - "🎵 Generate Audio" button → calls `synthesize_speech()`
 
 **Post-generation state:**
@@ -216,22 +228,55 @@ show_process_log("script_gen_log", "📋 Script Generation Log")
 
 **Prerequisites check:** Script must exist AND be approved.
 
+**Model Configuration Section:**
+- AI model selector at top of page (below project header)
+- Dropdown shows available prompting LLM models from `config.json`
+- Note: "Used for generating titles, descriptions, hashtags, and thumbnails"
+- Save button appears when selection differs from current model
+- Models: gemini-3-flash-preview, gemini-2.5-pro, gemini-2.5-flash
+
 **Pre-generation state:**
 - "📋 Generate Metadata" button → calls `generate_metadata()`
 
 **Post-generation state:**
-- Displays titles as a numbered list
-- Displays description in a text area (read-only)
-- Displays hashtags as inline tags
-- Copy-to-clipboard buttons for each section
-- Regenerate button
-- Approval section
+- **Titles section:** Numbered list with 🔄 regenerate button in header
+  - Individual regenerate: calls `regenerate_titles()`, keeps description/hashtags
+- **Description section:** Code block with copy button, 🔄 regenerate button in header
+  - Individual regenerate: calls `regenerate_description()`, keeps titles/hashtags
+  - Edit expander: text area for manual editing + save button
+- **Hashtags section:** Code block with copy button (space-separated)
+- **Full regenerate button:** At bottom, regenerates all metadata sections
+- **Approval section:** Approve / Revoke buttons
+
+**YouTube Thumbnail Generation:**
+- **Image model selector:** Dropdown for Imagen model selection
+  - Shows: imagen-4.0-ultra-generate-001 (best for text), imagen-4.0-generate-001, imagen-4.0-fast-generate-001
+  - Save button appears when selection differs from current
+- **Generate button:** "🎨 Generate Thumbnail" → calls `create_thumbnail()`
+  - Generates catchy text overlay using prompting LLM
+  - Creates image prompt with text embedding instructions
+  - Generates 16:9 thumbnail using selected Imagen model
+- **Post-generation display:**
+  - Full-width thumbnail preview
+  - Shows embedded text overlay
+  - View image prompt expander
+  - Download button (PNG)
+  - 🔄 Regenerate button
+- **Generation log:** Collapsible expander shows AI generation process
 
 ---
 
 ### `app/pages/5_images.py` — Images
 
 **Prerequisites check:** Script AND audio must exist AND be approved.
+
+**Model Configuration Section:**
+- **Image Prompt Generation Model:** Dropdown for prompting LLM selection
+  - Models: gemini-3-flash-preview, gemini-2.5-pro, gemini-2.5-flash
+  - Save button appears when selection differs from current
+- **Image Generation Model:** Dropdown for Imagen model selection
+  - Models: imagen-4.0-ultra-generate-001, imagen-4.0-generate-001, imagen-4.0-fast-generate-001
+  - Save button appears when selection differs from current
 
 **Two-step process:**
 

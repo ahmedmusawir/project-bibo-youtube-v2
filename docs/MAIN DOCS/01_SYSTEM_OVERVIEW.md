@@ -45,11 +45,12 @@ Each stage reads from and writes to a project folder under `projects/<project_na
 | 1 — Script | `2_script.py` | `summarization.py` | `0_transcript.txt` | `1_summary.txt` |
 | 2 — Audio | `3_audio.py` | `text_to_speech.py` | `1_summary.txt` | `2_audio.mp3` |
 | 3 — Metadata | `4_metadata.py` | `metadata_generation.py` | `1_summary.txt` | `4_metadata.json` |
+| 3a — Thumbnail | `4_metadata.py` | `thumbnail_generation.py` | `4_metadata.json` | `4_thumbnail.png` + `4_thumbnail_metadata.json` |
 | 4 — Image Prompts | `5_images.py` | `image_prompting.py` | `1_summary.txt` + `2_audio.mp3` | `3_image_prompts.json` + `3a_style_bible.txt` |
 | 5 — Images | `5_images.py` | `image_creation.py` | `3_image_prompts.json` | `5_images/*.png` |
 | 6 — Video | `6_video.py` | `video_composition.py` | `5_images/` + `2_audio.mp3` | `6_final_video.mp4` |
 
-> **Note:** Metadata (stage 3) and Image Prompts (stage 4) can be run in parallel after script approval. They both depend only on `1_summary.txt`.
+> **Note:** Metadata (stage 3), Thumbnail (stage 3a), and Image Prompts (stage 4) can be run in parallel after script approval. Thumbnail generation is optional and does not block the main pipeline.
 
 ---
 
@@ -87,9 +88,12 @@ The UI enforces this: each page checks that the previous stage is both **generat
            │                                              │
            ▼ (Google TTS)              ▼ (Gemini LLM)   ▼ (Gemini LLM)
     2_audio.mp3                 4_metadata.json    3_image_prompts.json
-           │                                        3a_style_bible.txt
-           │                                              │
-           └──────────────────────────────────────────────┤
+           │                           │            3a_style_bible.txt
+           │                           ▼ (Gemini + Vertex AI Imagen)     │
+           │                    4_thumbnail.png                          │
+           │                    (optional)                               │
+           │                                                             │
+           └──────────────────────────────────────────────┬──────────────┘
                                                           ▼ (Vertex AI Imagen)
                                                     5_images/*.png
                                                           │

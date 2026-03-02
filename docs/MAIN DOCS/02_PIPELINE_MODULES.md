@@ -12,6 +12,7 @@ src/
 ├── summarization.py          # Stage 1: Script generation via Gemini LLM
 ├── text_to_speech.py         # Stage 2: Audio synthesis via Google Cloud TTS
 ├── metadata_generation.py    # Stage 3: YouTube metadata via Gemini LLM
+├── thumbnail_generation.py   # Stage 3a: YouTube thumbnail via Gemini + Imagen
 ├── image_prompting.py        # Stage 4a: Image prompt generation via Gemini LLM
 ├── image_creation.py         # Stage 4b: Image generation via Vertex AI Imagen
 ├── video_composition.py      # Stage 5: Video assembly via MoviePy
@@ -217,6 +218,139 @@ Output is saved as JSON:
 
 **Environment variables used:**
 - `GOOGLE_API_KEY`
+
+### Individual Regeneration Functions
+
+**New in v2:** Individual section regeneration without regenerating all metadata.
+
+```python
+def regenerate_titles(summary_path: str, metadata_path: str) -> list
+def regenerate_description(summary_path: str, metadata_path: str) -> str
+```
+
+These functions:
+- Load existing metadata JSON
+- Regenerate only their specific section using Gemini LLM
+- Update and save the metadata file
+- Return the new content
+
+**UI Integration:** Metadata page has 🔄 buttons next to Titles and Description headers for individual regeneration.
+
+---
+
+## `src/thumbnail_generation.py`
+
+**Purpose:** Generates YouTube thumbnails with AI-generated text overlays using Gemini LLM + Vertex AI Imagen.
+
+**New module** — added to support YouTube thumbnail creation with embedded text.
+
+### Module Architecture
+
+Three-step pipeline:
+1. **Text Overlay Generation** (Gemini LLM)
+2. **Image Prompt Generation** (Gemini LLM)
+3. **Image Generation** (Vertex AI Imagen)
+
+### Internal Functions
+
+| Function | Description |
+|---|---|
+| `_initialize_vertex_ai()` | One-time Vertex AI SDK initialization. Sets project ID and region. |
+| `generate_thumbnail_text(metadata)` | Generates catchy 3-7 word text overlay from metadata using Gemini LLM at temp 0.9 |
+| `generate_thumbnail_prompt(metadata, thumbnail_text)` | Creates detailed Imagen prompt with explicit text embedding instructions |
+
+### Text Overlay Generation
+
+```python
+def generate_thumbnail_text(metadata: dict) -> str
+```
+
+**LLM Configuration:**
+- Model: `get_prompting_llm()` from config
+- Temperature: **0.9** (high for creative text)
+- Input: Video titles + description (first 300 chars)
+
+**Prompt Engineering:**
+- Enforces 3-7 words MAXIMUM
+- ALL CAPS for impact
+- Power words: REVEALED, SECRET, ULTIMATE, SHOCKING
+- Examples: "AI JUST CHANGED EVERYTHING", "THE SECRET THEY DON'T TELL YOU"
+
+**Output:** Single line of ALL CAPS text (e.g., "THIS WILL BLOW YOUR MIND")
+
+### Image Prompt Generation
+
+```python
+def generate_thumbnail_prompt(metadata: dict, thumbnail_text: str) -> str
+```
+
+**LLM Configuration:**
+- Model: `get_prompting_llm()` from config
+- Temperature: **0.8**
+- Input: Video titles + description + thumbnail text
+
+**Critical Prompt Requirements:**
+- **Must include text embedding instruction** with exact text to render
+- Specifies text placement (top/bottom/center)
+- Specifies text style: bold, large, high-contrast
+- Specifies text color with outline (white with black outline or vice versa)
+- Includes visual subject, color scheme, lighting, composition
+- Style keywords: photorealistic, cinematic, professional, high-resolution, text overlay
+
+**Output:** Detailed Imagen prompt (~250 words) with embedded text instruction
+
+### Public Function
+
+```python
+def create_thumbnail(metadata_path: str, output_path: str) -> dict
+```
+
+**Full execution flow:**
+1. Load metadata JSON (titles, description, hashtags)
+2. Generate thumbnail text overlay via `generate_thumbnail_text()`
+3. Generate detailed image prompt via `generate_thumbnail_prompt()`
+4. Initialize Vertex AI (if not already initialized)
+5. Load Imagen model: `get_image_gen_model()` from config
+6. Generate 16:9 image with `generate_images()`
+   - Aspect ratio: `16:9`
+   - Watermark: `False`
+   - Number of images: `1`
+7. Save thumbnail to `output_path`
+8. Save generation metadata to `{output_path}_metadata.json`
+
+**Output files:**
+- `4_thumbnail.png` — Final thumbnail image (16:9, PNG)
+- `4_thumbnail_metadata.json` — Contains:
+  ```json
+  {
+    "thumbnail_path": "path/to/4_thumbnail.png",
+    "thumbnail_text": "AI JUST CHANGED EVERYTHING",
+    "image_prompt": "Detailed prompt with text embedding..."
+  }
+  ```
+
+**Return value:** Dict with `thumbnail_path`, `thumbnail_text`, `image_prompt`
+
+### Model Selection
+
+**LLM:** Uses `llm_prompting.current` from `config/config.json` (same as metadata/image prompts)
+
+**Image Model:** Uses `image_gen.current` from `config/config.json`
+- **Recommended:** `imagen-4.0-ultra-generate-001` for best text embedding quality
+- Alternatives: `imagen-4.0-generate-001`, `imagen-4.0-fast-generate-001`
+
+**UI Integration:** Metadata page has image model selector in thumbnail section.
+
+### Dependencies
+- `langchain-core`, `langchain-google-genai` (for LLM calls)
+- `vertexai`, `google-cloud-aiplatform` (for Imagen)
+- `python-dotenv`
+
+### Environment Variables Used
+- `GOOGLE_API_KEY` (Gemini LLM)
+- `GOOGLE_APPLICATION_CREDENTIALS` (Vertex AI via ADC)
+- `GOOGLE_CLOUD_PROJECT` (Vertex AI project ID)
+- `GOOGLE_CLOUD_REGION` (Vertex AI region, default: `us-central1`)
 
 ---
 

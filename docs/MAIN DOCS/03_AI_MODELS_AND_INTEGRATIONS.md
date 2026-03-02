@@ -44,7 +44,7 @@ GOOGLE_API_KEY=your_gemini_api_key
 ["gemini-3-flash-preview", "gemini-3-pro-preview", "gemini-2.5-pro", "gemini-2.5-flash"]
 ```
 
-**How to switch:** Change `llm_summarization.current` in `config/config.json`, or use the model selector in the Streamlit UI (Script page settings).
+**How to switch:** Use the model selector dropdown at the top of the Script page, or manually edit `llm_summarization.current` in `config/config.json`.
 
 ---
 
@@ -64,7 +64,9 @@ GOOGLE_API_KEY=your_gemini_api_key
 ["gemini-3-flash-preview", "gemini-2.5-pro", "gemini-2.5-flash"]
 ```
 
-**Note:** A separate `llm_prompting` config key exists for metadata/image prompting, independent of the summarization LLM. This allows using a faster/cheaper model for prompting while using a more capable model for script generation.
+**Note:** A separate `llm_prompting` config key exists for metadata/image prompting/thumbnails, independent of the summarization LLM. This allows using a faster/cheaper model for prompting while using a more capable model for script generation.
+
+**How to switch:** Use the model selector dropdown at the top of the Metadata or Images pages, or manually edit `llm_prompting.current` in `config/config.json`.
 
 ---
 
@@ -117,7 +119,7 @@ GOOGLE_API_KEY=your_gemini_api_key
 - **Studio voices** (`Studio-O`, `Studio-M`): Highest quality, most natural. Higher cost.
 - **Neural2 voices** (`Neural2-D`, `Neural2-F`): High quality, slightly lower cost.
 
-**How to switch:** Change `tts.current_voice` and `tts.current_lang` in `config/config.json`, or use the voice selector in the Streamlit UI (Audio page settings).
+**How to switch:** Use the voice selector dropdown at the top of the Audio page, or manually edit `tts.current_voice` and `tts.current_lang` in `config/config.json`.
 
 **Full voice list:** See `docs/vertex_voice_list.txt` for all available Google TTS voices.
 
@@ -144,9 +146,11 @@ GOOGLE_API_KEY=your_gemini_api_key
 ```
 
 **Model tiers:**
-- `ultra`: Highest quality, slowest, most expensive
+- `ultra`: Highest quality, slowest, most expensive. **Best for text embedding** (thumbnails)
 - `generate`: Balanced quality/speed
 - `fast`: Fastest, lower quality — useful for drafts
+
+**How to switch:** Use the model selector dropdown on the Images page or Metadata page (thumbnail section), or manually edit `image_gen.current` in `config/config.json`.
 
 **Vertex AI initialization:**
 ```python
@@ -155,6 +159,48 @@ vertexai.init(
     location=os.getenv("GOOGLE_CLOUD_REGION", "us-central1")
 )
 ```
+
+---
+
+### 6. Google Gemini + Vertex AI — Thumbnail Generation
+
+| Property | Value |
+|---|---|
+| **Libraries** | `langchain-google-genai` (LLM), `vertexai` (Imagen) |
+| **Auth** | `GOOGLE_API_KEY` (Gemini), ADC (Imagen) |
+| **Module** | `src/thumbnail_generation.py` |
+| **LLM model** | Uses `llm_prompting.current` from config |
+| **Image model** | Uses `image_gen.current` from config |
+| **Aspect ratio** | `16:9` |
+| **Output format** | PNG |
+
+**Two-step process:**
+
+1. **Text Overlay Generation** (Gemini LLM):
+   - Analyzes metadata (titles, description)
+   - Generates catchy 3-7 word text overlay
+   - Uses high temperature (0.9) for creativity
+   - Output: ALL CAPS power words (e.g., "AI JUST CHANGED EVERYTHING")
+
+2. **Image Prompt Generation** (Gemini LLM):
+   - Creates detailed Imagen prompt
+   - **Critical:** Includes explicit text embedding instructions
+   - Specifies text placement, style, color, outline
+   - Temperature: 0.8
+
+3. **Image Generation** (Vertex AI Imagen):
+   - Generates 16:9 thumbnail with embedded text
+   - Uses selected Imagen model (Ultra recommended for text quality)
+   - Saves to `4_thumbnail.png` + `4_thumbnail_metadata.json`
+
+**UI Integration:**
+- Image model selector on Metadata page (thumbnail section)
+- Allows switching between Imagen Ultra/Standard/Fast
+- Ultra model provides best text embedding quality
+
+**Output files:**
+- `4_thumbnail.png` — Final thumbnail image
+- `4_thumbnail_metadata.json` — Contains thumbnail_text and image_prompt
 
 ---
 

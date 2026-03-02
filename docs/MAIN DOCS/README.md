@@ -31,6 +31,8 @@ Audio Synthesis (Google Cloud TTS)
     ↓ 2_audio.mp3
 Metadata Generation (Gemini LLM)
     ↓ 4_metadata.json
+    ↓ (optional) Thumbnail Generation (Gemini + Imagen)
+    ↓ 4_thumbnail.png
 Image Prompt Generation (Gemini LLM)
     ↓ 3_image_prompts.json  +  3a_style_bible.txt
 Image Creation (Vertex AI Imagen)
