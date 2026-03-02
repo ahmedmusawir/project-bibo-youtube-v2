@@ -39,8 +39,7 @@ def render_sidebar():
             selected_project = st.selectbox(
                 "Select Project",
                 projects,
-                index=current_index,
-                key="project_selector"
+                index=current_index
             )
 
             # Update session state if user changed selection
@@ -71,9 +70,6 @@ def render_sidebar():
                         create_project(new_project_name.strip())
                         st.session_state.current_project = new_project_name.strip()
                         st.session_state["_project_created"] = new_project_name.strip()
-                        # Clear the selector widget to force refresh
-                        if "project_selector" in st.session_state:
-                            del st.session_state["project_selector"]
                         st.rerun()
                     except Exception as e:
                         st.error(f"❌ Failed to create project: {e}")
