@@ -19,33 +19,38 @@ DEFAULT_LANGUAGE = "en-US"
 MAX_INLINE_AUDIO_SIZE = 10 * 1024 * 1024  # 10MB in bytes
 
 def _download_audio_to_temp(url: str) -> str:
-    """Downloads audio to a temporary file and returns the path."""
+    """Downloads audio to a temporary file and returns the path as mp3."""
+    import yt_dlp
     temp_dir = tempfile.gettempdir()
-    temp_audio_path = os.path.join(temp_dir, "temp_audio_for_transcription.mp3")
+    output_mp3 = os.path.join(temp_dir, "temp_audio_for_transcription.mp3")
+    
+    # Remove any leftover file from a previous run
+    if os.path.exists(output_mp3):
+        os.remove(output_mp3)
     
     ydl_opts = {
-        'format': 'bestaudio*',  # Accept any audio format
+        # No format selector — let yt-dlp pick the best available audio automatically
         'outtmpl': os.path.join(temp_dir, "temp_audio_for_transcription.%(ext)s"),
         'quiet': False,
         'no_warnings': False,
+        # Always extract audio and convert to mp3 via ffmpeg postprocessor
+        'postprocessors': [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '192',
+        }],
     }
     
-    with YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url, download=True)
-        downloaded_file = ydl.prepare_filename(info)
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        ydl.download([url])
     
-    # Convert to mp3 if not already
-    if not downloaded_file.endswith('.mp3'):
-        from pydub import AudioSegment
-        audio = AudioSegment.from_file(downloaded_file)
-        audio.export(temp_audio_path, format='mp3', bitrate='192k')
-        # Clean up original file
-        if os.path.exists(downloaded_file):
-            os.remove(downloaded_file)
-    else:
-        temp_audio_path = downloaded_file
+    if not os.path.exists(output_mp3):
+        raise RuntimeError(
+            f"yt-dlp completed but mp3 file not found at {output_mp3}. "
+            "Ensure ffmpeg is installed and accessible in PATH."
+        )
     
-    return temp_audio_path
+    return output_mp3
 
 def _get_speech_client():
     """Returns a Google Cloud Speech client. Uses ADC for authentication."""

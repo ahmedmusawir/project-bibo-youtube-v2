@@ -163,6 +163,29 @@ def main():
 
     st.markdown("---")
 
+    # Regenerate button — always visible
+    col_regen, col_spacer = st.columns([2, 5])
+    with col_regen:
+        if st.button("🔄 Regenerate Script", key="regen_script_btn", use_container_width=True):
+            if transcript_file.exists():
+                log_container = st.empty()
+                with st.spinner("Regenerating script..."):
+                    try:
+                        with capture_stdout_to_streamlit(log_container, session_key="script_gen_log"):
+                            summarize_transcript(
+                                str(transcript_file),
+                                str(script_file)
+                            )
+                        set_approval(project_name, "script", False)
+                        st.success("✅ Script regenerated! Review and approve below.")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"❌ Error: {str(e)}")
+            else:
+                st.error("❌ Transcript not found. Cannot regenerate.")
+
+    st.markdown("---")
+
     # Edit/View Script
     st.markdown("## Script Content")
 
@@ -179,39 +202,18 @@ def main():
             key="script_editor"
         )
 
-        col1, col2 = st.columns([1, 5])
-        with col1:
-            if st.button("💾 Save Changes", key="save_script_btn", type="primary"):
-                with open(script_file, 'w', encoding='utf-8') as f:
-                    f.write(edited_content)
+        if st.button("💾 Save Changes", key="save_script_btn", type="primary"):
+            with open(script_file, 'w', encoding='utf-8') as f:
+                f.write(edited_content)
 
-                # Reset approval if content changed
-                if edited_content != script_content:
-                    set_approval(project_name, "script", False)
-                    st.success("✅ Changes saved! Please re-approve the script.")
-                else:
-                    st.info("No changes detected")
+            # Reset approval if content changed
+            if edited_content != script_content:
+                set_approval(project_name, "script", False)
+                st.success("✅ Changes saved! Please re-approve the script.")
+            else:
+                st.info("No changes detected")
 
-                st.rerun()
-
-        with col2:
-            if st.button("🔄 Regenerate Script", key="regen_script_btn"):
-                if transcript_file.exists():
-                    log_container = st.empty()
-                    with st.spinner("Regenerating script..."):
-                        try:
-                            with capture_stdout_to_streamlit(log_container, session_key="script_gen_log"):
-                                summarize_transcript(
-                                    str(transcript_file),
-                                    str(script_file)
-                                )
-                            set_approval(project_name, "script", False)
-                            st.success("✅ Script regenerated! Review and approve below.")
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"❌ Error: {str(e)}")
-                else:
-                    st.error("❌ Transcript not found. Cannot regenerate.")
+            st.rerun()
 
     else:
         # View mode - display as markdown
