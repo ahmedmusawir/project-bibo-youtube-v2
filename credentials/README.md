@@ -2,7 +2,7 @@
 
 Place your Google Cloud service account JSON key file in this directory.
 
-**Required file:** `cyberize-vertex-api.json`
+**Required file:** `YOUR_SERVICE_ACCOUNT.json`
 
 This file is used for:
 - Google Cloud Text-to-Speech (audio generation)

@@ -1,14 +1,27 @@
+# Response: Phase 4 — README Draft (Review Before Write)
+
+**Phase:** 4 — Build & Handoff · **Status:** PENDING_REVIEW
+**Date:** 2026-08-07
+
+---
+
+## Authorized Write Surface
+
+`README.md` only. No `.gitignore` or `.env.example` edits per operator disposition.
+
+## Assets
+
+No screenshots, diagrams, or video walkthroughs supplied by operator. Screenshots and Video Walkthrough sections are **omitted** entirely.
+
+## Proposed README
+
+```markdown
 # VidGen
 
 **A human-gated AI pipeline that turns a YouTube URL or article text into a narrated documentary video with AI-generated visuals.**
 
 [![Python](https://img.shields.io/badge/Python-3.12.3-3776AB?logo=python&logoColor=white)](https://www.python.org)
 [![Streamlit](https://img.shields.io/badge/Streamlit-%E2%89%A51.31.0-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io)
-[![Google Gemini](https://img.shields.io/badge/Google%20Gemini-Config--driven-4285F4?logo=google&logoColor=white)](https://ai.google.dev)
-[![Google Cloud TTS](https://img.shields.io/badge/Google%20Cloud%20TTS-Neural2%20%2F%20Studio-34A853?logo=google-cloud&logoColor=white)](https://cloud.google.com/text-to-speech)
-[![Vertex AI Imagen](https://img.shields.io/badge/Vertex%20AI%20Imagen-Config--driven-4285F4?logo=google-cloud&logoColor=white)](https://cloud.google.com/vertex-ai/generative-ai/docs/image/overview)
-[![MoviePy](https://img.shields.io/badge/MoviePy-%E2%89%A52.2.1-000000?logo=python&logoColor=white)](https://zulko.github.io/moviepy/)
-[![pytest](https://img.shields.io/badge/pytest-25%20tests%20%2818%20unit%20%2B%207%20integration%29-0A9EDC?logo=pytest&logoColor=white)](#verify-the-build)
 
 ---
 
@@ -17,29 +30,6 @@
 Creating a professional documentary-style YouTube video from raw content traditionally takes days: transcribing audio, writing a tight script, recording narration, sourcing or generating visuals, editing everything together, and writing metadata and thumbnails. Each step requires a different tool and a different skill set.
 
 VidGen collapses that into a ~40-minute human-gated workflow. AI executes each stage — transcription, summarization, narration, image generation, and video assembly — but a human reviews the result and explicitly approves it before the pipeline advances. This is not "fully automated"; the gate is the feature. File-based state keeps the system lightweight (no database), and a config-driven model layer lets you swap LLMs, voices, and image generators without touching core logic. Hand-built end to end; later brought under the App Factory, an AI-augmented delivery methodology.
-
----
-
-## Screenshots
-
-**Pipeline Architecture**
-
-![VidGen Pipeline Architecture](https://res.cloudinary.com/dyb0qa58h/image/upload/v1786116539/VID%20GEN/71c4c465-4402-4559-a657-c0bb7380cf20.png)
-
-*The 7-stage VidGen pipeline: transcription → summarization → TTS → image prompting → image generation → metadata → video composition. The Researcher/Scraper path shown is planned roadmap, not shipped.*
-
-**Streamlit UI — Pipeline Stages**
-
-| | |
-|---|---|
-| ![Inputs page](https://res.cloudinary.com/dyb0qa58h/image/upload/v1785507722/VID%20GEN/image_1_tbttjw.png) | ![Script page](https://res.cloudinary.com/dyb0qa58h/image/upload/v1785507720/VID%20GEN/image_2_ktrxtz.png) |
-| *Inputs: Paste text or a YouTube URL to start a project.* | *Script: AI generates a documentary-style script; human reviews and approves.* |
-| ![Audio page](https://res.cloudinary.com/dyb0qa58h/image/upload/v1785507719/VID%20GEN/image_3_wco0nq.png) | ![Metadata page](https://res.cloudinary.com/dyb0qa58h/image/upload/v1785507719/VID%20GEN/image_4_gntl4s.png) |
-| *Audio: Google Cloud TTS synthesizes narration with Studio voices.* | *Metadata: AI generates 5 titles, description, and hashtags for upload.* |
-| ![Video page](https://res.cloudinary.com/dyb0qa58h/image/upload/v1785507717/VID%20GEN/image_5_d4cccm.png) | ![Gallery view](https://res.cloudinary.com/dyb0qa58h/image/upload/v1785507717/VID%20GEN/image_6_xlz307.png) |
-| *Video: MoviePy assembles final 1920×1080 video with crossfades.* | *Gallery: Review generated images before approving.* |
-| ![Final output](https://res.cloudinary.com/dyb0qa58h/image/upload/v1785507717/VID%20GEN/image_7_ody1kt.png) | |
-| *Final output: Rendered video ready for download and YouTube upload.* | |
 
 ---
 
@@ -109,3 +99,21 @@ pytest tests/integration/ -m integration -v  # → 7 integration tests (requires
 
 Built by **[Ahmed Musawir](https://github.com/ahmedmusawir)** — Software Architect & AI Engineer.  
 Hand-built end to end; later brought under the App Factory, an AI-augmented delivery methodology.
+```
+
+## Review Checklist
+
+- [x] No screenshots section (no assets supplied)
+- [x] No video walkthrough (no assets supplied)
+- [x] "~40-minute human-gated workflow" framed as feature, not apology
+- [x] No "fully automated" or "autonomous"
+- [x] No Researcher/Scraper mention
+- [x] No "~30 published videos" (omitted per disposition)
+- [x] No live-site badge (never deployed)
+- [x] Methodology line: honest arc, not anachronism
+- [x] Quickstart test counts: 18 unit + 7 integration, counted by grep this session
+- [x] Integration tests flagged as requiring credentials
+
+---
+
+**Status:** Awaiting operator review and APPROVED before writing README.md.
